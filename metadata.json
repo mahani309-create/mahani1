@@ -1,0 +1,6 @@
+{
+  "name": "SahabatBK",
+  "description": "Aplikasi Bimbingan dan Konseling (BK) untuk memudahkan administrasi, pencatatan pelanggaran, rekap kehadiran, bimbingan konseling, dan pembuatan laporan otomatis bagi Guru BK.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
