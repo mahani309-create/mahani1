@@ -914,7 +914,7 @@ export default function SiswaMaster({
                   {/* Document Title */}
                   <div className="text-center mb-6">
                     <h3 className="font-bold text-sm uppercase underline tracking-wider text-slate-900">Kartu Biografi Bio-Psikologis Siswa</h3>
-                    <p className="text-[10px] text-slate-500 font-semibold mt-1">Nomor Registrasi BK: BK/SMAN1/{new Date().getFullYear()}/{selectedStudent.id.toUpperCase()}</p>
+                    <p className="text-[10px] text-slate-500 font-semibold mt-1">Nomor Registrasi BK: BK/SMPN3KRAS/{new Date().getFullYear()}/{selectedStudent.id.toUpperCase()}</p>
                   </div>
 
                   {/* Bio Data Section */}

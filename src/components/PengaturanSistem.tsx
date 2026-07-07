@@ -62,7 +62,10 @@ export default function PengaturanSistem({
     const stored = localStorage.getItem('sahabatbk_accounts');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored) as UserAccount[];
+        const customAccounts = parsed.filter(acc => !acc.isDefault);
+        const merged = [...DEFAULT_ACCOUNTS, ...customAccounts];
+        return merged;
       } catch (e) {
         // ignore
       }

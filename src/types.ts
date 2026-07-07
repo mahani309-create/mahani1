@@ -18,10 +18,10 @@ export interface UserAccount {
 export const DEFAULT_ACCOUNTS: UserAccount[] = [
   {
     id: 'acc-1',
-    username: 'endang123',
+    username: 'sri',
     nama: 'Sri Rahayu, S.Pd',
     role: 'GURU_BK',
-    password: 'password123',
+    password: '123456',
     isDefault: true
   },
   {
@@ -35,10 +35,10 @@ export const DEFAULT_ACCOUNTS: UserAccount[] = [
   },
   {
     id: 'acc-3',
-    username: 'mulyono123',
+    username: 'kepsek',
     nama: 'Dr. H. Mulyono, M.Si.',
     role: 'KEPALA_SEKOLAH',
-    password: 'password123',
+    password: '123456',
     isDefault: true
   }
 ];
