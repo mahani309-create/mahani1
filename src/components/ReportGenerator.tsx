@@ -133,7 +133,7 @@ export default function ReportGenerator({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Penyusunan Laporan Otomatis (Report Generator)</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Konfigurasi sekali klik untuk menerbitkan dokumen legal kesiswaan bulanan untuk diserahkan kepada Kepala Sekolah SMAN 1.</p>
+          <p className="text-xs text-slate-500 mt-0.5">Konfigurasi sekali klik untuk menerbitkan dokumen legal kesiswaan bulanan untuk diserahkan kepada Kepala Sekolah SMP NEGERI 3 KRAS.</p>
         </div>
       </div>
 
@@ -297,13 +297,13 @@ export default function ReportGenerator({
               {/* Real Formal School Document Template */}
               <div className="bg-white p-10 border border-slate-300 shadow-lg rounded-xl min-h-[800px] flex flex-col justify-between text-slate-800">
                 
-                {/* Official SMAN 1 Kop Surat */}
+                {/* Official SMP NEGERI 3 KRAS Kop Surat */}
                 <div>
                   <div className="text-center border-b-2 border-slate-900 pb-4 mb-6">
-                    <h2 className="font-extrabold text-base text-slate-900 uppercase">Pemerintah Provinsi Daerah Khusus Ibukota Jakarta</h2>
-                    <h1 className="font-black text-lg text-slate-900 uppercase">SMAN 1 JAKARTA PUSAT</h1>
+                    <h2 className="font-extrabold text-base text-slate-900 uppercase">Pemerintah Kabupaten Kediri</h2>
+                    <h1 className="font-black text-lg text-slate-900 uppercase">SMP NEGERI 3 KRAS</h1>
                     <p className="text-[9px] text-slate-500 font-medium italic">
-                      Jl. Budi Utomo No.7, Pasar Baru, Sawah Besar, Kota Jakarta Pusat, DKI Jakarta 10710 &bull; Telp: (021) 386500
+                      Jl. Raya Kras, Kediri, Jawa Timur &bull; Telp: (0354) 441000
                     </p>
                     <p className="text-[10px] text-slate-700 font-bold mt-1.5 uppercase tracking-wider">
                       Unit Pelaksana Teknis Bimbingan dan Konseling (BK)
@@ -318,16 +318,16 @@ export default function ReportGenerator({
                       {generatedReport.type === 'BIMBINGAN' && `LAPORAN JURNAL LAYANAN BIMBINGAN KONSELING (BK)`}
                     </h3>
                     <p className="text-[9px] text-slate-500 font-bold uppercase mt-1">PERIODE BULAN: {generatedReport.month} {generatedReport.year}</p>
-                    <p className="text-[8px] text-slate-400 mt-0.5">KODE REKAP: SMAN1/BK-REP/{generatedReport.type}/{generatedReport.year}-{selectedMonth}</p>
+                    <p className="text-[8px] text-slate-400 mt-0.5">KODE REKAP: SMPN3KRAS/BK-REP/{generatedReport.type}/{generatedReport.year}-{selectedMonth}</p>
                   </div>
 
                   {/* Summary commentary paragraph */}
                   <div className="text-xs leading-relaxed text-slate-700 bg-slate-50 border border-slate-200 p-3.5 rounded-lg mb-6">
                     <p className="font-medium text-slate-800">
-                      Yth. Kepala Sekolah SMAN 1 Jakarta Pusat,
+                      Yth. Kepala Sekolah SMP NEGERI 3 KRAS,
                     </p>
                     <p className="mt-1">
-                      Bersama ini kami sampaikan data rekapitulasi kesiswaan terintegrasi dari database SahabatBK. {generatedReport.summaryText} Data ini dihimpun secara berkala dan dianalisis secara berkesinambungan sebagai bahan pertimbangan keputusan pembinaan siswa SMAN 1.
+                      Bersama ini kami sampaikan data rekapitulasi kesiswaan terintegrasi dari database SahabatBK. {generatedReport.summaryText} Data ini dihimpun secara berkala dan dianalisis secara berkesinambungan sebagai bahan pertimbangan keputusan pembinaan siswa SMP NEGERI 3 KRAS.
                     </p>
                   </div>
 
@@ -458,15 +458,15 @@ export default function ReportGenerator({
                 <div className="grid grid-cols-2 text-xs text-center pt-8 border-t border-dashed border-slate-300 mt-8">
                   <div>
                     <p className="font-semibold text-slate-500">Menyetujui,</p>
-                    <p className="font-bold text-slate-800 mb-14">Kepala Sekolah SMAN 1</p>
+                    <p className="font-bold text-slate-800 mb-14">Kepala Sekolah SMP NEGERI 3 KRAS</p>
                     <p className="font-extrabold text-slate-900 underline">Dr. H. Mulyono, M.Si.</p>
                     <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19681123 199403 1 002</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-500">Jakarta, {new Date().getDate()} {generatedReport.month} {generatedReport.year}</p>
+                    <p className="font-semibold text-slate-500">Kediri, {new Date().getDate()} {generatedReport.month} {generatedReport.year}</p>
                     <p className="font-bold text-slate-800 mb-14">Kepala Layanan BK</p>
-                    <p className="font-extrabold text-slate-900 underline">Dra. Endang Sulastri, M.Pd.</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19780412 199903 2 001</p>
+                    <p className="font-extrabold text-slate-900 underline">Sri Rahayu, S.Pd</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19820514 200801 2 015</p>
                   </div>
                 </div>
 

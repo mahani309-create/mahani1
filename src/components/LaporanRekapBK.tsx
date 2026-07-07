@@ -328,7 +328,7 @@ export default function LaporanRekapBK({
                 <div className="flex flex-col items-center text-center justify-center text-slate-400 p-6">
                   <Layers className="h-10 w-10 text-slate-300 mb-2" />
                   <p className="text-xs font-semibold">Tidak ada bimbingan tercatat di bulan {selectedMonthLabel}.</p>
-                  <p className="text-[10px] text-slate-400 mt-1">Grafik di bawah menunjukkan estimasi data tahunan kesiswaan SMAN 1:</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Grafik di bawah menunjukkan estimasi data tahunan kesiswaan SMP NEGERI 3 KRAS:</p>
                   
                   {/* Fallback inline mini-chart */}
                   <div className="flex items-end justify-center gap-6 h-28 mt-4 w-full max-w-xs">
@@ -541,7 +541,7 @@ export default function LaporanRekapBK({
           </div>
 
           <div className="text-[10px] text-slate-400 font-extrabold flex items-center justify-between">
-            <span>SISTEM AKREDITASI BK SMAN 1 JAKARTA</span>
+            <span>SISTEM AKREDITASI BK SMP NEGERI 3 KRAS</span>
             <span>TOTAL TERLIHAT: {filteredBimbinganTable.length} RECORD</span>
           </div>
 
@@ -566,7 +566,7 @@ export default function LaporanRekapBK({
             <span className="text-[9px] text-slate-400 font-extrabold uppercase block">Struktur Validasi Tanda Tangan:</span>
             <div className="flex items-center gap-2 font-bold text-slate-700">
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Guru BK: {role === 'GURU_BK' ? 'Dra. Endang Sulastri, M.Pd. (Aktif)' : 'Dra. Endang Sulastri, M.Pd.'}</span>
+              <span>Guru BK: {role === 'GURU_BK' ? 'Sri Rahayu, S.Pd (Aktif)' : 'Sri Rahayu, S.Pd'}</span>
             </div>
             <div className="flex items-center gap-2 font-bold text-slate-700">
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
@@ -574,7 +574,7 @@ export default function LaporanRekapBK({
             </div>
             <div className="flex items-center gap-2 font-bold text-slate-700">
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
-              <span>Mengetahui: Kepala Sekolah SMAN 1</span>
+              <span>Mengetahui: Kepala Sekolah SMP NEGERI 3 KRAS</span>
             </div>
           </div>
 
@@ -599,15 +599,15 @@ export default function LaporanRekapBK({
           ========================================================================= */}
       <div className="hidden print:block w-full max-w-4xl mx-auto bg-white p-6 font-serif text-slate-900 leading-normal text-xs">
         
-        {/* Kop Surat (SMAN 1 Portal BK) */}
+        {/* Kop Surat (SMP NEGERI 3 KRAS Portal BK) */}
         <div className="border-b-4 border-double border-slate-800 pb-4 text-center space-y-1">
-          <h1 className="text-lg font-bold uppercase tracking-wide">Pemerintah Provinsi DKI Jakarta</h1>
-          <h2 className="text-xl font-extrabold uppercase tracking-widest text-indigo-900">SMA Negeri 1 Jakarta Pusat</h2>
+          <h1 className="text-lg font-bold uppercase tracking-wide">Pemerintah Kabupaten Kediri</h1>
+          <h2 className="text-xl font-extrabold uppercase tracking-widest text-indigo-900">SMP NEGERI 3 KRAS</h2>
           <p className="text-[10px] font-sans text-slate-500 italic">
-            Jl. Budi Utomo No. 7, Pasar Baru, Kec. Sawah Besar, Jakarta Pusat, Kode Pos 10710
+            Jl. Raya Kras, Kediri, Jawa Timur, Kode Pos 64172
           </p>
           <p className="text-[9px] font-sans text-slate-400">
-            Telp: (021) 3865077 | Email: info@sman1jkt.sch.id | Portal: sahabatbk.sman1jkt.sch.id
+            Telp: (0354) 441000 | Email: info@smpn3kras.sch.id | Portal: sahabatbk.smpn3kras.sch.id
           </p>
         </div>
 
@@ -629,12 +629,12 @@ export default function LaporanRekapBK({
               <tr>
                 <td className="py-1 w-44 font-bold text-slate-500">Penyusun Dokumen</td>
                 <td className="py-1 px-2 w-4">:</td>
-                <td className="py-1 font-bold text-slate-800">Dra. Endang Sulastri, M.Pd. (Guru BK Utama)</td>
+                <td className="py-1 font-bold text-slate-800">Sri Rahayu, S.Pd (Guru BK Utama)</td>
               </tr>
               <tr>
                 <td className="py-1 font-bold text-slate-500">Akses Penandatangan</td>
                 <td className="py-1 px-2">:</td>
-                <td className="py-1 font-semibold text-slate-700">Wali Kelas & Kepala Sekolah SMAN 1</td>
+                <td className="py-1 font-semibold text-slate-700">Wali Kelas & Kepala Sekolah SMP NEGERI 3 KRAS</td>
               </tr>
               <tr>
                 <td className="py-1 font-bold text-slate-500">Volume Konseling Selesai</td>
@@ -652,7 +652,7 @@ export default function LaporanRekapBK({
 
         {/* Narrative preamble */}
         <p className="mb-6 indent-8 text-justify leading-relaxed">
-          Berdasarkan hasil rekam jejak bimbingan konseling dan agenda mediasi kesiswaan sepanjang bulan {selectedMonthLabel} {selectedYear} di SMA Negeri 1 Jakarta Pusat, berikut dilampirkan laporan rekapitulasi penanganan komprehensif bagi peserta didik yang terdaftar dalam bimbingan konseling. Seluruh informasi yang tertulis di bawah ini dijaga asas kerahasiaannya dan dipergunakan murni demi pengembangan motivasi, prestasi belajar, serta pembinaan disiplin positif siswa SMAN 1.
+          Berdasarkan hasil rekam jejak bimbingan konseling dan agenda mediasi kesiswaan sepanjang bulan {selectedMonthLabel} {selectedYear} di SMP NEGERI 3 KRAS, berikut dilampirkan laporan rekapitulasi penanganan komprehensif bagi peserta didik yang terdaftar dalam bimbingan konseling. Seluruh informasi yang tertulis di bawah ini dijaga asas kerahasiaannya dan dipergunakan murni demi pengembangan motivasi, prestasi belajar, serta pembinaan disiplin positif siswa SMP NEGERI 3 KRAS.
         </p>
 
         {/* Table of Records in Print */}
@@ -722,8 +722,8 @@ export default function LaporanRekapBK({
               <p className="font-bold">Konselor Guru BK</p>
             </div>
             <div className="space-y-0.5">
-              <p className="font-bold underline">Dra. Endang Sulastri, M.Pd.</p>
-              <p className="text-[10px] text-slate-500 font-semibold">NIP. 197410042003122002</p>
+              <p className="font-bold underline">Sri Rahayu, S.Pd</p>
+              <p className="text-[10px] text-slate-500 font-semibold">NIP. 19820514 200801 2 015</p>
             </div>
           </div>
 
@@ -731,7 +731,7 @@ export default function LaporanRekapBK({
           <div className="space-y-16">
             <div>
               <p>Mengesahkan,</p>
-              <p className="font-bold">Kepala Sekolah SMAN 1</p>
+              <p className="font-bold">Kepala Sekolah SMP NEGERI 3 KRAS</p>
             </div>
             <div className="space-y-0.5">
               <p className="font-bold underline">Dr. H. Mulyono, M.Si.</p>

@@ -144,7 +144,7 @@ export default function PelanggaranSistem({
       };
     } else {
       return {
-        title: 'Laporan Pelanggaran Keseluruhan Sekolah SMAN 1',
+        title: 'Laporan Pelanggaran Keseluruhan Sekolah SMP NEGERI 3 KRAS',
         items: pelanggaranList,
         totalPoin: pelanggaranList.reduce((acc, curr) => acc + curr.poin, 0)
       };
@@ -487,10 +487,10 @@ export default function PelanggaranSistem({
                 {/* School Letterhead (Kop Surat) */}
                 <div>
                   <div className="text-center border-b-2 border-slate-900 pb-4 mb-6">
-                    <h2 className="font-extrabold text-base text-slate-900 uppercase">Pemerintah Provinsi Daerah Khusus Ibukota Jakarta</h2>
-                    <h1 className="font-black text-lg text-slate-900 uppercase">SMAN 1 JAKARTA PUSAT</h1>
+                    <h2 className="font-extrabold text-base text-slate-900 uppercase">Pemerintah Kabupaten Kediri</h2>
+                    <h1 className="font-black text-lg text-slate-900 uppercase">SMP NEGERI 3 KRAS</h1>
                     <p className="text-[9px] text-slate-500 font-medium italic">
-                      Jl. Budi Utomo No.7, Pasar Baru, Sawah Besar, Kota Jakarta Pusat, DKI Jakarta 10710 &bull; Telp: (021) 386500
+                      Jl. Raya Kras, Kediri, Jawa Timur &bull; Telp: (0354) 441000
                     </p>
                     <p className="text-[10px] text-slate-700 font-bold mt-1 uppercase tracking-wider">
                       Unit Bimbingan dan Konseling &bull; Laporan Kedisiplinan Siswa
@@ -562,7 +562,7 @@ export default function PelanggaranSistem({
                   {/* Parental summon notes if student points exceed 50 */}
                   {printFilterType === 'SISWA' && printData.totalPoin >= 50 && (
                     <div className="mt-5 p-3 border-l-4 border-red-500 bg-red-50 text-[11px] text-red-900 font-medium leading-relaxed rounded-r-md">
-                      <strong>REKOMENDASI UNIT BK:</strong> Mengingat akumulasi poin kedisiplinan yang bersangkutan telah menyentuh/melebihi batas aman SP1 (50 Poin), maka lembar laporan ini sah dijadikan dasar lampiran pemanggilan orang tua/wali murid SMAN 1 guna proses mediasi bimbingan konseling lanjutan.
+                      <strong>REKOMENDASI UNIT BK:</strong> Mengingat akumulasi poin kedisiplinan yang bersangkutan telah menyentuh/melebihi batas aman SP1 (50 Poin), maka lembar laporan ini sah dijadikan dasar lampiran pemanggilan orang tua/wali murid SMP NEGERI 3 KRAS guna proses mediasi bimbingan konseling lanjutan.
                     </div>
                   )}
                 </div>
@@ -582,10 +582,10 @@ export default function PelanggaranSistem({
                     <p className="text-[10px] text-slate-500 mt-0.5">NIP. .........................................</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-500">Jakarta, {new Date().getDate()} Juli 2026</p>
-                    <p className="font-bold text-slate-800 mb-14">Konselor / Guru BK SMAN 1</p>
-                    <p className="font-extrabold text-slate-900 underline">Dra. Endang Sulastri, M.Pd.</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19780412 199903 2 001</p>
+                    <p className="font-semibold text-slate-500">Kediri, {new Date().getDate()} Juli 2026</p>
+                    <p className="font-bold text-slate-800 mb-14">Konselor / Guru BK SMP NEGERI 3 KRAS</p>
+                    <p className="font-extrabold text-slate-900 underline">Sri Rahayu, S.Pd</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19820514 200801 2 015</p>
                   </div>
                 </div>
 

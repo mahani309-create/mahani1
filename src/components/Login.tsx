@@ -53,35 +53,11 @@ export default function Login({ onLogin }: LoginProps) {
       }
       onLogin(matched.role, matched.nama, matched.kelasWali);
     } else {
-      setError('Username tidak terdaftar untuk peran ini. Silakan gunakan Akun Demo di bawah atau tambahkan akun baru di Pengaturan.');
+      setError('Username tidak terdaftar untuk peran ini. Silakan masukkan username yang terdaftar atau tambahkan akun baru di Pengaturan Sistem.');
     }
   };
 
-  const handleQuickLogin = (selectedRole: UserRole) => {
-    const accountsList = getAccounts();
-    // Prioritize default or first available account of this role
-    const matched = accountsList.find(acc => acc.role === selectedRole);
-    if (matched) {
-      onLogin(selectedRole, matched.nama, matched.kelasWali);
-    } else {
-      // Emergency fallback
-      let name = '';
-      let waliClass = undefined;
-      switch (selectedRole) {
-        case 'GURU_BK':
-          name = 'Dra. Endang Sulastri, M.Pd.';
-          break;
-        case 'WALI_KELAS':
-          name = 'Pak Ahmad Subarjo, S.Pd.';
-          waliClass = 'XI-IPA-1';
-          break;
-        case 'KEPALA_SEKOLAH':
-          name = 'Dr. H. Mulyono, M.Si.';
-          break;
-      }
-      onLogin(selectedRole, name, waliClass);
-    }
-  };
+
 
   return (
     <div id="login-page" className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
@@ -96,7 +72,7 @@ export default function Login({ onLogin }: LoginProps) {
           SahabatBK
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600 font-medium">
-          SMAN 1 - Portal Bimbingan & Konseling Siswa
+          SMP NEGERI 3 KRAS - Portal Bimbingan & Konseling Siswa
         </p>
       </div>
 
@@ -246,53 +222,12 @@ export default function Login({ onLogin }: LoginProps) {
             </div>
           </form>
 
-          {/* Quick Demo Bypass */}
-          <div className="mt-8 border-t border-slate-100 pt-6">
-            <div className="relative flex justify-center text-sm mb-4">
-              <span className="px-2 bg-white text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Shield className="h-3 w-3" /> Akun Demo Pengujian Cepat
-              </span>
-            </div>
-            <div className="grid grid-cols-1 gap-2.5">
-              <button
-                id="demo-login-bk"
-                type="button"
-                onClick={() => handleQuickLogin('GURU_BK')}
-                className="w-full text-left px-3 py-2.5 border border-indigo-100 bg-indigo-50/50 hover:bg-indigo-50 text-slate-800 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer"
-              >
-                <div>
-                  <div className="font-semibold text-indigo-800">Masuk sebagai Guru BK</div>
-                  <div className="text-slate-500 text-[10px]">Akses Penuh: Bimbingan, Poin, & Admin</div>
-                </div>
-                <span className="text-indigo-600 font-bold">Demo &rarr;</span>
-              </button>
 
-              <button
-                id="demo-login-wali"
-                type="button"
-                onClick={() => handleQuickLogin('WALI_KELAS')}
-                className="w-full text-left px-3 py-2.5 border border-slate-100 bg-slate-50/50 hover:bg-slate-50 text-slate-800 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer"
-              >
-                <div>
-                  <div className="font-semibold text-slate-700">Masuk sebagai Wali Kelas (XI-IPA-1)</div>
-                  <div className="text-slate-500 text-[10px]">Akses Terbatas: Hanya Siswa Binaan Kelas XI-IPA-1</div>
-                </div>
-                <span className="text-slate-600 font-bold">Demo &rarr;</span>
-              </button>
 
-              <button
-                id="demo-login-kepsek"
-                type="button"
-                onClick={() => handleQuickLogin('KEPALA_SEKOLAH')}
-                className="w-full text-left px-3 py-2.5 border border-amber-100 bg-amber-50/50 hover:bg-amber-50 text-slate-800 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer"
-              >
-                <div>
-                  <div className="font-semibold text-amber-800">Masuk sebagai Kepala Sekolah</div>
-                  <div className="text-slate-500 text-[10px]">Akses Lihat: Dashboard, Statistik, & Cetak Laporan</div>
-                </div>
-                <span className="text-amber-600 font-bold">Demo &rarr;</span>
-              </button>
-            </div>
+          {/* Developer Credit */}
+          <div className="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-400">
+            <p>Sistem Informasi Bimbingan Konseling</p>
+            <p className="font-semibold text-slate-500 mt-1">Developer: KHABIBU ROHMAN</p>
           </div>
         </div>
       </div>

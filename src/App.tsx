@@ -51,7 +51,7 @@ export default function App() {
     return (localStorage.getItem('sahabatbk_role') as UserRole) || 'GURU_BK';
   });
   const [currentUsername, setCurrentUsername] = useState<string>(() => {
-    return localStorage.getItem('sahabatbk_username') || 'Dra. Endang Sulastri, M.Pd.';
+    return localStorage.getItem('sahabatbk_username') || 'Sri Rahayu, S.Pd';
   });
   const [kelasWali, setKelasWali] = useState<string | undefined>(() => {
     return localStorage.getItem('sahabatbk_kelas_wali') || undefined;
@@ -133,33 +133,7 @@ export default function App() {
     localStorage.removeItem('sahabatbk_logged_in');
   };
 
-  // Quick Switch Roles inside session for easy grading
-  const handleSwitchRoleInSession = (role: UserRole) => {
-    let name = '';
-    let targetWali: string | undefined = undefined;
-    switch (role) {
-      case 'GURU_BK':
-        name = 'Dra. Endang Sulastri, M.Pd.';
-        break;
-      case 'WALI_KELAS':
-        name = 'Pak Ahmad Subarjo, S.Pd.';
-        targetWali = 'XI-IPA-1';
-        break;
-      case 'KEPALA_SEKOLAH':
-        name = 'Dr. H. Mulyono, M.Si.';
-        break;
-    }
-    setCurrentUserRole(role);
-    setCurrentUsername(name);
-    setKelasWali(targetWali);
-    if (targetWali) {
-      localStorage.setItem('sahabatbk_kelas_wali', targetWali);
-    } else {
-      localStorage.removeItem('sahabatbk_kelas_wali');
-    }
-    localStorage.setItem('sahabatbk_role', role);
-    localStorage.setItem('sahabatbk_username', name);
-  };
+
 
   // Cross-Navigation callback (e.g., clicking on alert on Dashboard redirects to Student Master)
   const handleCrossNavigation = (tab: string, studentId?: string) => {
@@ -310,7 +284,7 @@ export default function App() {
           </div>
           <div>
             <h1 className="font-extrabold text-sm text-indigo-900 tracking-tight">SahabatBK</h1>
-            <p className="text-[10px] text-slate-400 font-bold tracking-wide uppercase">SMAN 1 Portal BK</p>
+            <p className="text-[10px] text-slate-400 font-bold tracking-wide uppercase">SMPN 3 KRAS PORTAL BK</p>
           </div>
         </div>
 
@@ -357,39 +331,7 @@ export default function App() {
           })}
         </nav>
 
-        {/* Dynamic Role Swapper for Demo Testing (Mandatory for convenient inspection) */}
-        <div className="p-4 m-4 bg-indigo-50/50 border border-indigo-100/60 rounded-xl text-[11px] space-y-2">
-          <div className="flex items-center gap-1 text-indigo-700 font-bold uppercase tracking-wider text-[9px]">
-            <Sparkles className="h-3 w-3" /> Quick Switch Role
-          </div>
-          <p className="text-slate-500 text-[10px]">Tukar peran secara instan untuk menguji batasan akses:</p>
-          <div className="grid grid-cols-1 gap-1">
-            <button
-              onClick={() => handleSwitchRoleInSession('GURU_BK')}
-              className={`py-1 text-[10px] font-bold rounded text-left px-2 border transition-all cursor-pointer ${
-                currentUserRole === 'GURU_BK' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              &bull; Guru BK (Full)
-            </button>
-            <button
-              onClick={() => handleSwitchRoleInSession('WALI_KELAS')}
-              className={`py-1 text-[10px] font-bold rounded text-left px-2 border transition-all cursor-pointer ${
-                currentUserRole === 'WALI_KELAS' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              &bull; Wali Kelas (XI-IPA-1)
-            </button>
-            <button
-              onClick={() => handleSwitchRoleInSession('KEPALA_SEKOLAH')}
-              className={`py-1 text-[10px] font-bold rounded text-left px-2 border transition-all cursor-pointer ${
-                currentUserRole === 'KEPALA_SEKOLAH' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              &bull; Kepala Sekolah
-            </button>
-          </div>
-        </div>
+
 
         {/* Log Out Button */}
         <div className="p-4 border-t border-slate-100">
@@ -400,6 +342,10 @@ export default function App() {
             <LogOut className="h-4 w-4 shrink-0" />
             <span>Keluar Akun</span>
           </button>
+          
+          <div className="mt-4 pt-3 border-t border-slate-100 text-center text-[10px] text-slate-400">
+            <p>Developer: <strong className="text-slate-500">KHABIBU ROHMAN</strong></p>
+          </div>
         </div>
 
       </aside>
@@ -428,7 +374,7 @@ export default function App() {
 
           {/* Desktop header metadata */}
           <div className="hidden lg:flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <span>SMAN 1 Jakarta Pusat</span>
+            <span>SMP NEGERI 3 KRAS</span>
             <span>&bull;</span>
             <span className="text-slate-400">Tahun Pelajaran 2026/2027 Ganjil</span>
           </div>
@@ -571,33 +517,11 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Mobile Role Swapper inside sidebar */}
+              {/* Mobile Account Info */}
               <div className="p-4 mx-4 my-4 bg-slate-50 rounded-xl border border-slate-100 text-xs">
                 <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Akun Aktif</span>
                 <div className="font-bold text-slate-800 mt-0.5">{currentUsername}</div>
                 <div className="mt-1 text-[10px] text-slate-500">Role: {currentUserRole}</div>
-
-                <div className="mt-3 space-y-1 pt-2 border-t border-slate-100">
-                  <span className="text-[8px] text-indigo-600 uppercase font-bold tracking-wider block mb-1">Quick Switch Role:</span>
-                  <button
-                    onClick={() => { handleSwitchRoleInSession('GURU_BK'); setIsMobileMenuOpen(false); }}
-                    className="w-full text-left py-1 text-[10px] font-bold rounded text-slate-600 hover:text-indigo-700 cursor-pointer"
-                  >
-                    &bull; Guru BK
-                  </button>
-                  <button
-                    onClick={() => { handleSwitchRoleInSession('WALI_KELAS'); setIsMobileMenuOpen(false); }}
-                    className="w-full text-left py-1 text-[10px] font-bold rounded text-slate-600 hover:text-indigo-700 cursor-pointer"
-                  >
-                    &bull; Wali Kelas (XI-IPA-1)
-                  </button>
-                  <button
-                    onClick={() => { handleSwitchRoleInSession('KEPALA_SEKOLAH'); setIsMobileMenuOpen(false); }}
-                    className="w-full text-left py-1 text-[10px] font-bold rounded text-slate-600 hover:text-indigo-700 cursor-pointer"
-                  >
-                    &bull; Kepala Sekolah
-                  </button>
-                </div>
               </div>
 
               {/* Mobile navigation links */}

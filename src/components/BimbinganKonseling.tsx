@@ -305,7 +305,7 @@ export default function BimbinganKonseling({
 
                   <div className="border-t border-slate-50 pt-3 mt-4 flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                     <span>Layanan {journal.jenisLayanan}</span>
-                    <span className="text-indigo-600">Arsip BK SMAN 1</span>
+                    <span className="text-indigo-600">Arsip BK SMP NEGERI 3 KRAS</span>
                   </div>
                 </div>
               ))

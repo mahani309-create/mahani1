@@ -466,10 +466,10 @@ export default function KehadiranSistem({
                 {/* School Letterhead */}
                 <div>
                   <div className="text-center border-b-2 border-slate-900 pb-4 mb-6">
-                    <h2 className="font-extrabold text-base text-slate-900 uppercase">Pemerintah Provinsi Daerah Khusus Ibukota Jakarta</h2>
-                    <h1 className="font-black text-lg text-slate-900 uppercase">SMAN 1 JAKARTA PUSAT</h1>
+                    <h2 className="font-extrabold text-base text-slate-900 uppercase">Pemerintah Kabupaten Kediri</h2>
+                    <h1 className="font-black text-lg text-slate-900 uppercase">SMP NEGERI 3 KRAS</h1>
                     <p className="text-[9px] text-slate-500 font-medium italic">
-                      Jl. Budi Utomo No.7, Pasar Baru, Sawah Besar, Kota Jakarta Pusat, DKI Jakarta 10710 &bull; Telp: (021) 386500
+                      Jl. Raya Kras, Kediri, Jawa Timur &bull; Telp: (0354) 441000
                     </p>
                     <p className="text-[10px] text-slate-700 font-bold mt-1 uppercase tracking-wider">
                       Unit Bimbingan dan Konseling &bull; Rekapitulasi Presensi Kehadiran Siswa
@@ -534,7 +534,7 @@ export default function KehadiranSistem({
                   </div>
 
                   <p className="text-[10px] text-slate-500 mt-4 italic leading-relaxed">
-                    * Catatan: Persentase kehadiran dihitung berdasarkan asumsi 60 hari belajar aktif per semester. Laporan ini sah dijadikan acuan wali kelas dalam penentuan pengisian rapor siswa SMAN 1.
+                    * Catatan: Persentase kehadiran dihitung berdasarkan asumsi 60 hari belajar aktif per semester. Laporan ini sah dijadikan acuan wali kelas dalam penentuan pengisian rapor siswa SMP NEGERI 3 KRAS.
                   </p>
                 </div>
 
@@ -549,10 +549,10 @@ export default function KehadiranSistem({
                     <p className="text-[10px] text-slate-500 mt-0.5">NIP. .........................................</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-500">Jakarta, {new Date().getDate()} Juli 2026</p>
-                    <p className="font-bold text-slate-800 mb-14">Konselor / Guru BK SMAN 1</p>
-                    <p className="font-extrabold text-slate-900 underline">Dra. Endang Sulastri, M.Pd.</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19780412 199903 2 001</p>
+                    <p className="font-semibold text-slate-500">Kediri, {new Date().getDate()} Juli 2026</p>
+                    <p className="font-bold text-slate-800 mb-14">Konselor / Guru BK SMP NEGERI 3 KRAS</p>
+                    <p className="font-extrabold text-slate-900 underline">Sri Rahayu, S.Pd</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19820514 200801 2 015</p>
                   </div>
                 </div>
 

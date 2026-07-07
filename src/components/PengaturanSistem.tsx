@@ -24,7 +24,9 @@ import {
   Sparkles,
   Users,
   UserPlus,
-  Trash2
+  Trash2,
+  Edit2,
+  X
 } from 'lucide-react';
 import {
   INITIAL_SISWA,
@@ -75,9 +77,17 @@ export default function PengaturanSistem({
   const [newRole, setNewRole] = useState<UserRole>('WALI_KELAS');
   const [newKelasWali, setNewKelasWali] = useState('XI-IPA-1');
 
+  // Editing state for user accounts
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  const [editNama, setEditNama] = useState('');
+  const [editUsername, setEditUsername] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [editRole, setEditRole] = useState<UserRole>('WALI_KELAS');
+  const [editKelasWali, setEditKelasWali] = useState('XI-IPA-1');
+
   // Form states - Profile & School
-  const [schoolName, setSchoolName] = useState(() => localStorage.getItem('sahabatbk_setting_school_name') || 'SMA Negeri 1 Jakarta');
-  const [schoolAddress, setSchoolAddress] = useState(() => localStorage.getItem('sahabatbk_setting_school_address') || 'Jl. Budi Utomo No. 7, Sawah Besar, Jakarta Pusat');
+  const [schoolName, setSchoolName] = useState(() => localStorage.getItem('sahabatbk_setting_school_name') || 'SMP NEGERI 3 KRAS');
+  const [schoolAddress, setSchoolAddress] = useState(() => localStorage.getItem('sahabatbk_setting_school_address') || 'Jl. Raya Kras, Kediri, Jawa Timur');
   const [principalName, setPrincipalName] = useState(() => localStorage.getItem('sahabatbk_setting_principal_name') || 'Dr. H. Mulyono, M.Si.');
   const [principalNip, setPrincipalNip] = useState(() => localStorage.getItem('sahabatbk_setting_principal_nip') || '196805121994031005');
   const [counselorNip, setCounselorNip] = useState(() => localStorage.getItem('sahabatbk_setting_counselor_nip') || '197410042003122002');
@@ -170,13 +180,58 @@ export default function PengaturanSistem({
   const handleDeleteAccount = (id: string) => {
     const matched = accountsList.find(acc => acc.id === id);
     if (matched && matched.isDefault) {
-      alert('Akun bawaan sistem (default) tidak dapat dihapus untuk keamanan demo.');
+      alert('Akun bawaan sistem (default) tidak dapat dihapus untuk keamanan sistem.');
       return;
     }
     if (confirm('Apakah Anda yakin ingin menghapus akun ini?')) {
       setAccountsList(prev => prev.filter(acc => acc.id !== id));
       triggerSuccessMessage('Akun berhasil dihapus dari sistem.');
     }
+  };
+
+  // Start Editing Account
+  const handleStartEditAccount = (acc: UserAccount) => {
+    setEditingAccountId(acc.id);
+    setEditNama(acc.nama);
+    setEditUsername(acc.username);
+    setEditPassword(acc.password || 'password123');
+    setEditRole(acc.role);
+    setEditKelasWali(acc.kelasWali || 'XI-IPA-1');
+  };
+
+  // Cancel Editing Account
+  const handleCancelEditAccount = () => {
+    setEditingAccountId(null);
+  };
+
+  // Save Edited Account
+  const handleSaveEditAccount = (id: string) => {
+    if (!editNama.trim() || !editUsername.trim()) {
+      alert('Nama Lengkap dan Username harus diisi!');
+      return;
+    }
+
+    if (accountsList.some(acc => acc.id !== id && acc.username.toLowerCase() === editUsername.trim().toLowerCase() && acc.role === editRole)) {
+      alert(`Username "${editUsername}" dengan peran ${editRole} sudah terdaftar!`);
+      return;
+    }
+
+    setAccountsList(prev => prev.map(acc => {
+      if (acc.id === id) {
+        return {
+          ...acc,
+          nama: editNama.trim(),
+          username: editUsername.trim(),
+          password: editPassword,
+          role: editRole,
+          kelasWali: editRole === 'WALI_KELAS' ? editKelasWali : undefined
+        };
+      }
+      return acc;
+    }));
+
+    setEditingAccountId(null);
+    triggerSuccessMessage('Akun pengguna berhasil diperbarui!');
   };
 
   // Handle Restore Default Accounts
@@ -660,45 +715,139 @@ export default function PengaturanSistem({
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-slate-100">
-                        {accountsList.map((acc) => (
-                          <tr key={acc.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-3.5 py-3">
-                              <p className="text-xs font-bold text-slate-800">{acc.nama}</p>
-                              {acc.role === 'WALI_KELAS' && (
-                                <p className="text-[9px] text-emerald-600 font-extrabold uppercase mt-0.5">Wali Kelas: {acc.kelasWali}</p>
-                              )}
-                            </td>
-                            <td className="px-3.5 py-3">
-                              <code className="text-[11px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-semibold">{acc.username}</code>
-                            </td>
-                            <td className="px-3.5 py-3">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide uppercase ${
-                                acc.role === 'GURU_BK' 
-                                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
-                                  : acc.role === 'WALI_KELAS'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                  : 'bg-amber-50 text-amber-700 border border-amber-100'
-                              }`}>
-                                {acc.role === 'GURU_BK' ? 'Guru BK' : acc.role === 'WALI_KELAS' ? 'Wali Kelas' : 'Kepala Sekolah'}
-                              </span>
-                            </td>
-                            <td className="px-3.5 py-3 text-right">
-                              {acc.isDefault ? (
-                                <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">Sistem</span>
-                              ) : (
-                                <button
-                                  id={`btn-delete-acc-${acc.id}`}
-                                  type="button"
-                                  onClick={() => handleDeleteAccount(acc.id)}
-                                  className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer inline-flex items-center"
-                                  title="Hapus Akun"
+                        {accountsList.map((acc) => {
+                          const isEditing = editingAccountId === acc.id;
+                          return isEditing ? (
+                            <tr key={acc.id} className="bg-indigo-50/40">
+                              <td className="px-3.5 py-3 space-y-1.5">
+                                <label className="block text-[8px] font-extrabold text-slate-400 uppercase">Nama Lengkap</label>
+                                <input
+                                  type="text"
+                                  value={editNama}
+                                  onChange={(e) => setEditNama(e.target.value)}
+                                  className="w-full px-2 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  placeholder="Nama Lengkap"
+                                  required
+                                />
+                                {editRole === 'WALI_KELAS' && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <span className="text-[8px] font-extrabold text-slate-500 uppercase">Kelas:</span>
+                                    <select
+                                      value={editKelasWali}
+                                      onChange={(e) => setEditKelasWali(e.target.value)}
+                                      className="px-1.5 py-0.5 text-[10px] font-bold border border-slate-200 rounded bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    >
+                                      <option value="XI-IPA-1">XI-IPA-1</option>
+                                      <option value="XI-IPS-2">XI-IPS-2</option>
+                                      <option value="X-A">X-A</option>
+                                      <option value="X-B">X-B</option>
+                                      <option value="XII-IPA-2">XII-IPA-2</option>
+                                    </select>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-3.5 py-3 space-y-1.5">
+                                <label className="block text-[8px] font-extrabold text-slate-400 uppercase">Username / NIP</label>
+                                <input
+                                  type="text"
+                                  value={editUsername}
+                                  onChange={(e) => setEditUsername(e.target.value)}
+                                  className="w-full px-2 py-1.5 text-xs font-mono bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                  placeholder="Username"
+                                  required
+                                />
+                                <div className="space-y-0.5">
+                                  <label className="block text-[8px] font-extrabold text-slate-400 uppercase">Password</label>
+                                  <input
+                                    type="password"
+                                    value={editPassword}
+                                    onChange={(e) => setEditPassword(e.target.value)}
+                                    className="w-full px-2 py-1 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    placeholder="Password"
+                                    required
+                                  />
+                                </div>
+                              </td>
+                              <td className="px-3.5 py-3">
+                                <label className="block text-[8px] font-extrabold text-slate-400 uppercase mb-1">Peran</label>
+                                <select
+                                  value={editRole}
+                                  onChange={(e) => setEditRole(e.target.value as UserRole)}
+                                  className="px-2 py-1.5 text-xs font-bold border border-slate-200 rounded-lg bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                 >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                                  <option value="GURU_BK">Guru BK</option>
+                                  <option value="WALI_KELAS">Wali Kelas</option>
+                                  <option value="KEPALA_SEKOLAH">Kepala Sekolah</option>
+                                </select>
+                              </td>
+                              <td className="px-3.5 py-3 text-right">
+                                <div className="flex flex-col items-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveEditAccount(acc.id)}
+                                    className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition-colors cursor-pointer"
+                                  >
+                                    <Save className="h-3 w-3" /> Simpan
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={handleCancelEditAccount}
+                                    className="w-full flex items-center justify-center gap-1 px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold transition-colors cursor-pointer border border-slate-200"
+                                  >
+                                    <X className="h-3 w-3" /> Batal
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            <tr key={acc.id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-3.5 py-3">
+                                <p className="text-xs font-bold text-slate-800">{acc.nama}</p>
+                                {acc.role === 'WALI_KELAS' && (
+                                  <p className="text-[9px] text-emerald-600 font-extrabold uppercase mt-0.5">Wali Kelas: {acc.kelasWali}</p>
+                                )}
+                              </td>
+                              <td className="px-3.5 py-3">
+                                <code className="text-[11px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-semibold">{acc.username}</code>
+                              </td>
+                              <td className="px-3.5 py-3">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide uppercase ${
+                                  acc.role === 'GURU_BK' 
+                                    ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
+                                    : acc.role === 'WALI_KELAS'
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                    : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                }`}>
+                                  {acc.role === 'GURU_BK' ? 'Guru BK' : acc.role === 'WALI_KELAS' ? 'Wali Kelas' : 'Kepala Sekolah'}
+                                </span>
+                              </td>
+                              <td className="px-3.5 py-3 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartEditAccount(acc)}
+                                    className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors cursor-pointer inline-flex items-center"
+                                    title="Edit Akun"
+                                  >
+                                    <Edit2 className="h-3.5 w-3.5" />
+                                  </button>
+                                  
+                                  {!acc.isDefault && (
+                                    <button
+                                      id={`btn-delete-acc-${acc.id}`}
+                                      type="button"
+                                      onClick={() => handleDeleteAccount(acc.id)}
+                                      className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-lg transition-colors cursor-pointer inline-flex items-center"
+                                      title="Hapus Akun"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -706,7 +855,7 @@ export default function PengaturanSistem({
                   <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3.5 flex items-start gap-2.5">
                     <Info className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-[10px] font-bold text-amber-800 leading-normal">Informasi Otentikasi Demo</p>
+                      <p className="text-[10px] font-bold text-amber-800 leading-normal">Informasi Otentikasi Akun</p>
                       <p className="text-[10px] text-amber-700 mt-0.5 leading-normal">
                         Semua akun baru yang Anda tambahkan dapat digunakan langsung untuk masuk melalui form login manual. Untuk mencobanya, silakan log out, pilih Peran yang sesuai, lalu ketik Username dan Password yang didaftarkan.
                       </p>
@@ -941,7 +1090,7 @@ export default function PengaturanSistem({
               <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
                 <Info className="h-5 w-5 text-indigo-600" />
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-800">Tentang SahabatBK SMAN 1</h3>
+                  <h3 className="font-extrabold text-sm text-slate-800">Tentang SahabatBK SMP NEGERI 3 KRAS</h3>
                   <p className="text-[10px] text-slate-500 font-medium">Informasi pengembang dan kualifikasi portal bimbingan kesiswaan</p>
                 </div>
               </div>
@@ -954,7 +1103,7 @@ export default function PengaturanSistem({
                   </div>
                   <div>
                     <h4 className="font-extrabold text-sm text-indigo-900">SahabatBK Portal &mdash; Versi 2.4.0</h4>
-                    <p className="text-[10px] text-slate-400 font-semibold uppercase">Platform Digitalisasi BK Sekolah Menengah Atas</p>
+                    <p className="text-[10px] text-slate-400 font-semibold uppercase">Platform Digitalisasi BK Sekolah Menengah Pertama</p>
                   </div>
                 </div>
 
@@ -967,7 +1116,7 @@ export default function PengaturanSistem({
                 </p>
 
                 <div className="border-t border-slate-100 pt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider flex justify-between">
-                  <span>Dibuat demi kemajuan SMAN 1 Jakarta</span>
+                  <span>Dibuat Oleh KHABIBU ROHMAN</span>
                   <span>SahabatBK &copy; 2026 All Rights Reserved</span>
                 </div>
 

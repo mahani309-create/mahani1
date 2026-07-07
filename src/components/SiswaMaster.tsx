@@ -217,7 +217,7 @@ export default function SiswaMaster({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Data Master Bio-Psikologis Siswa</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Daftar biodata diri, riwayat medis, profil keluarga, dan status akumulasi poin siswa SMAN 1.</p>
+          <p className="text-xs text-slate-500 mt-0.5">Daftar biodata diri, riwayat medis, profil keluarga, dan status akumulasi poin siswa SMP NEGERI 3 KRAS.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
@@ -901,10 +901,10 @@ export default function SiswaMaster({
                 {/* School Kop Surat */}
                 <div>
                   <div className="text-center border-b-2 border-slate-900 pb-4 mb-6">
-                    <h2 className="font-extrabold text-lg text-slate-900 uppercase tracking-wide">Pemerintah Provinsi Daerah Khusus Ibukota Jakarta</h2>
-                    <h1 className="font-black text-xl text-slate-900 uppercase">SMAN 1 JAKARTA PUSAT</h1>
+                    <h2 className="font-extrabold text-lg text-slate-900 uppercase tracking-wide">Pemerintah Kabupaten Kediri</h2>
+                    <h1 className="font-black text-xl text-slate-900 uppercase">SMP NEGERI 3 KRAS</h1>
                     <p className="text-[10px] text-slate-500 font-medium italic mt-0.5">
-                      Jl. Budi Utomo No.7, Pasar Baru, Sawah Besar, Kota Jakarta Pusat, DKI Jakarta 10710 &bull; Telp: (021) 386500
+                      Jl. Raya Kras, Kediri, Jawa Timur &bull; Telp: (0354) 441000
                     </p>
                     <p className="text-[10px] text-slate-600 font-bold mt-1 uppercase tracking-wider">
                       Layanan Bimbingan dan Konseling (BK) &bull; SahabatBK

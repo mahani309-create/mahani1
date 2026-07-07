@@ -19,7 +19,7 @@ export const DEFAULT_ACCOUNTS: UserAccount[] = [
   {
     id: 'acc-1',
     username: 'endang123',
-    nama: 'Dra. Endang Sulastri, M.Pd.',
+    nama: 'Sri Rahayu, S.Pd',
     role: 'GURU_BK',
     password: 'password123',
     isDefault: true
