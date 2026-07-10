@@ -177,6 +177,25 @@ export default function App() {
     setSiswaList(prev => prev.map(s => s.id === updatedSiswa.id ? updatedSiswa : s));
   };
 
+  // 2b. Bulk Update Siswa
+  const handleBulkUpdateSiswa = (updatedSiswaList: Siswa[]) => {
+    const updatedMap = new Map(updatedSiswaList.map(s => [s.id, s]));
+    setSiswaList(prev => prev.map(s => updatedMap.has(s.id) ? updatedMap.get(s.id)! : s));
+
+    // Keep Kehadiran records synced for updated students
+    setKehadiranList(prev => prev.map(k => {
+      const match = updatedSiswaList.find(s => s.id === k.siswaId);
+      if (match) {
+        return {
+          ...k,
+          kelasSiswa: match.kelas,
+          namaSiswa: match.nama // just in case
+        };
+      }
+      return k;
+    }));
+  };
+
   // 3. Add Pelanggaran (Violation Record) & Increment Points automatically
   const handleAddPelanggaran = (newPelanggaranData: Omit<Pelanggaran, 'id'>) => {
     const newId = `p-${Date.now()}`;
@@ -426,6 +445,7 @@ export default function App() {
               siswaList={siswaList}
               onAddSiswa={handleAddSiswa}
               onUpdateSiswa={handleUpdateSiswa}
+              onBulkUpdateSiswa={handleBulkUpdateSiswa}
               initialSelectedStudentId={selectedStudentIdFromAlert}
             />
           )}

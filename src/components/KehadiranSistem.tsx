@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { Kehadiran, UserRole, Siswa } from '../types';
 import {
   AlertTriangle,
@@ -17,7 +18,10 @@ import {
   Edit,
   Sliders,
   Sparkles,
-  Download
+  Download,
+  QrCode,
+  Camera,
+  Check
 } from 'lucide-react';
 import { exportKehadiranToExcel } from '../lib/dataHelper';
 
@@ -38,6 +42,234 @@ export default function KehadiranSistem({
 }: KehadiranSistemProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('SEMUA');
+
+  // Real Camera Barcode/QR Code Scan states
+  const [showScanModal, setShowScanModal] = useState(false);
+  const [scanInputNisn, setScanInputNisn] = useState('');
+  const [scannedStudent, setScannedStudent] = useState<Siswa | null>(null);
+  const [scanMessage, setScanMessage] = useState<string | null>(null);
+  const [scanLogs, setScanLogs] = useState<{ time: string; name: string; nisn: string; kelas: string; status: string }[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+
+  // Camera integration states
+  const [cameraList, setCameraList] = useState<{ id: string; label: string }[]>([]);
+  const [selectedCameraId, setSelectedCameraId] = useState<string>('');
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [isScannerRunning, setIsScannerRunning] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+
+  // Sound generator for checkout style barcode beep
+  const playBeepSound = () => {
+    try {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtxClass) return;
+      const audioCtx = new AudioCtxClass();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime); // 1.2 kHz high checkout beep
+      gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime); // Soft volume
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.12); // Play for 120ms
+    } catch (err) {
+      console.warn('Gagal memutar audio beep:', err);
+    }
+  };
+
+  // Helper to process scanned NISN/ID code
+  const processScannedText = (decodedText: string) => {
+    const trimmedNisn = decodedText.trim();
+    if (!trimmedNisn) return;
+
+    const student = siswaList.find(s => s.nisn === trimmedNisn || s.id === trimmedNisn);
+
+    if (!student) {
+      setScanMessage(`ERROR: NISN atau ID "${trimmedNisn}" Tidak Terdaftar!`);
+      return;
+    }
+
+    setScannedStudent(student);
+
+    // Fetch student's current attendance record
+    const attRecord = kehadiranList.find(k => k.siswaId === student.id);
+    if (attRecord) {
+      const newAlpa = Math.max(0, attRecord.alpa - 1);
+      const totalAbsences = newAlpa + attRecord.sakit + attRecord.izin + attRecord.diska;
+      const totalDays = 60;
+      const newPercentage = Math.max(0, Math.min(100, Math.round(((totalDays - totalAbsences) / totalDays) * 100)));
+
+      const updatedRecord: Kehadiran = {
+        ...attRecord,
+        alpa: newAlpa,
+        alpaConsecutive: 0, // Reset consecutive alpa since they have checked in!
+        persentaseKehadiran: newPercentage
+      };
+      onUpdateKehadiran(updatedRecord);
+      setScanMessage(`PRESENSI BERHASIL: ${student.nama} (Kelas ${student.kelas}) dicatat HADIR.`);
+    } else {
+      setScanMessage(`SUKSES: Identitas ${student.nama} valid.`);
+    }
+
+    // Add scan log
+    const newLog = {
+      time: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      name: student.nama,
+      nisn: student.nisn,
+      kelas: student.kelas,
+      status: 'HADIR (OK)'
+    };
+    
+    setScanLogs(prev => {
+      // Avoid duplicate logs if scanned in rapid succession
+      const lastLog = prev[0];
+      if (lastLog && lastLog.nisn === student.nisn) {
+        return prev;
+      }
+      return [newLog, ...prev];
+    });
+  };
+
+  // Real Camera Barcode/QR Code Scanner using html5-qrcode
+  useEffect(() => {
+    if (!showScanModal) {
+      if (scannerRef.current) {
+        if (scannerRef.current.isScanning) {
+          scannerRef.current.stop().catch(err => console.error("Gagal menghentikan scanner:", err));
+        }
+        scannerRef.current = null;
+      }
+      setIsScannerRunning(false);
+      setCameraError(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    const startCamera = async () => {
+      // Small timeout to allow modal animation & container to render in DOM
+      await new Promise(resolve => setTimeout(resolve, 350));
+      if (!isMounted) return;
+
+      const element = document.getElementById('reader');
+      if (!element) return;
+
+      try {
+        const qrCodeInstance = new Html5Qrcode('reader');
+        scannerRef.current = qrCodeInstance;
+        setIsScannerRunning(true);
+
+        const devices = await Html5Qrcode.getCameras();
+        if (!isMounted) return;
+
+        if (devices && devices.length > 0) {
+          setCameraList(devices);
+          const defaultCam = devices.find(d => 
+            d.label.toLowerCase().includes('back') || 
+            d.label.toLowerCase().includes('environment') || 
+            d.label.toLowerCase().includes('rear')
+          ) || devices[0];
+          
+          setSelectedCameraId(defaultCam.id);
+          
+          await qrCodeInstance.start(
+            defaultCam.id,
+            {
+              fps: 15,
+              qrbox: (width, height) => ({ width: Math.min(width, 280), height: Math.min(height, 160) }),
+              aspectRatio: 1.777778
+            },
+            (decodedText) => {
+              playBeepSound();
+              processScannedText(decodedText);
+            },
+            () => {}
+          );
+        } else {
+          // Fallback to environment facingMode
+          await qrCodeInstance.start(
+            { facingMode: 'environment' },
+            {
+              fps: 15,
+              qrbox: { width: 250, height: 150 }
+            },
+            (decodedText) => {
+              playBeepSound();
+              processScannedText(decodedText);
+            },
+            () => {}
+          );
+        }
+      } catch (err: any) {
+        console.error('Error starting scanner:', err);
+        if (isMounted) {
+          setCameraError(err?.message || 'Kamera tidak dapat diakses atau izin kamera ditolak.');
+        }
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      isMounted = false;
+      if (scannerRef.current) {
+        if (scannerRef.current.isScanning) {
+          scannerRef.current.stop().catch(err => console.error("Gagal stop scanner di cleanup:", err));
+        }
+        scannerRef.current = null;
+      }
+      setIsScannerRunning(false);
+    };
+  }, [showScanModal]);
+
+  // Handle camera switching from select dropdown
+  const handleCameraChange = async (cameraId: string) => {
+    setSelectedCameraId(cameraId);
+    if (scannerRef.current) {
+      try {
+        if (scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
+        }
+        await scannerRef.current.start(
+          cameraId,
+          {
+            fps: 15,
+            qrbox: (width, height) => ({ width: Math.min(width, 280), height: Math.min(height, 160) }),
+            aspectRatio: 1.777778
+          },
+          (decodedText) => {
+            playBeepSound();
+            processScannedText(decodedText);
+          },
+          () => {}
+        );
+      } catch (err: any) {
+        console.error('Gagal beralih kamera:', err);
+        setCameraError('Gagal beralih ke kamera terpilih: ' + err.message);
+      }
+    }
+  };
+
+  // Handle manual input scanner submission (for laser wedge fallback)
+  const handleExecuteScan = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scanInputNisn.trim()) return;
+
+    setIsScanning(true);
+    setScanMessage(null);
+    setScannedStudent(null);
+
+    setTimeout(() => {
+      setIsScanning(false);
+      playBeepSound();
+      processScannedText(scanInputNisn.trim());
+      setScanInputNisn('');
+    }, 150);
+  };
 
   // Attendance update modal
   const [editingRecord, setEditingRecord] = useState<Kehadiran | null>(null);
@@ -127,6 +359,14 @@ export default function KehadiranSistem({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            id="btn-scan-barcode-absensi"
+            onClick={() => setShowScanModal(true)}
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm hover:shadow-md"
+          >
+            <QrCode className="h-4 w-4" /> Scan Barcode Kartu Siswa
+          </button>
+
           <button
             id="btn-export-kehadiran"
             onClick={() => exportKehadiranToExcel(filteredKehadiran)}
@@ -557,6 +797,177 @@ export default function KehadiranSistem({
                 </div>
 
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- ⭐ INTERACTIVE BARCODE/CAMERA ABSENSI SCANNER MODAL --- */}
+      {showScanModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-3xl flex flex-col overflow-hidden animate-scale-up">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                <QrCode className="h-5 w-5 text-emerald-600 animate-pulse" />
+                <span>Pindai Barcode / QR Kartu Siswa (Kamera Aktif)</span>
+              </h3>
+              <button 
+                onClick={() => {
+                  setShowScanModal(false);
+                  setScanMessage(null);
+                  setScannedStudent(null);
+                }}
+                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50">
+              {/* Left Column: Real Camera Viewport & Controls */}
+              <div className="space-y-4">
+                {/* Camera Source Selector (if multiple exist) */}
+                {cameraList.length > 1 && (
+                  <div className="bg-white p-3 rounded-xl border border-slate-200">
+                    <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Pilih Sumber Kamera</label>
+                    <select
+                      value={selectedCameraId}
+                      onChange={(e) => handleCameraChange(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-700"
+                    >
+                      {cameraList.map((cam) => (
+                        <option key={cam.id} value={cam.id}>
+                          {cam.label || `Kamera ${cam.id}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Video Viewport Container */}
+                <div className="relative bg-slate-950 aspect-video rounded-2xl border border-slate-800 overflow-hidden shadow-inner flex flex-col justify-center">
+                  {/* Target element for html5-qrcode library rendering */}
+                  <div id="reader" className="w-full h-full overflow-hidden" style={{ minHeight: '190px' }}></div>
+                  
+                  {/* Custom frame aesthetic overlay */}
+                  <div className="absolute inset-0 pointer-events-none border border-emerald-500/10 rounded-2xl" />
+                  
+                  {/* Scanner sight corners */}
+                  <div className="absolute top-4 left-4 w-4 h-4 border-t-2 border-l-2 border-emerald-500 pointer-events-none" />
+                  <div className="absolute top-4 right-4 w-4 h-4 border-t-2 border-r-2 border-emerald-500 pointer-events-none" />
+                  <div className="absolute bottom-4 left-4 w-4 h-4 border-b-2 border-l-2 border-emerald-500 pointer-events-none" />
+                  <div className="absolute bottom-4 right-4 w-4 h-4 border-b-2 border-r-2 border-emerald-500 pointer-events-none" />
+
+                  {/* Red/Green Neon scanning bounce line if active */}
+                  {isScannerRunning && !cameraError && (
+                    <div className="absolute left-0 right-0 h-0.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] top-1/2 -translate-y-1/2 pointer-events-none animate-[bounce_2.5s_infinite_ease-in-out]" />
+                  )}
+
+                  {/* Camera Error Display overlay */}
+                  {cameraError && (
+                    <div className="absolute inset-0 bg-slate-900/95 flex flex-col items-center justify-center text-center p-4 z-20 space-y-2">
+                      <AlertTriangle className="h-8 w-8 text-rose-500 animate-bounce" />
+                      <p className="text-xs font-bold text-rose-300">Akses Kamera Terhambat</p>
+                      <p className="text-[10px] text-slate-400 max-w-xs">{cameraError}</p>
+                      <p className="text-[10px] text-emerald-400 font-bold">Tetap gunakan form input NISN manual di bawah.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Scanned Student Profile Quick Peek */}
+                {scannedStudent && (
+                  <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
+                    <img 
+                      src={scannedStudent.fotoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'} 
+                      alt={scannedStudent.nama}
+                      className="h-11 w-11 object-cover rounded-full border border-emerald-500"
+                    />
+                    <div className="flex-1">
+                      <h5 className="text-xs font-black text-slate-800">{scannedStudent.nama}</h5>
+                      <p className="text-[10px] text-slate-500 font-bold">Kelas {scannedStudent.kelas} &bull; NISN: {scannedStudent.nisn}</p>
+                    </div>
+                    <span className="text-[10px] bg-emerald-600 text-white px-2.5 py-1 rounded-full font-black uppercase tracking-wider">
+                      TERBACA OK
+                    </span>
+                  </div>
+                )}
+
+                {/* Form Input Manual (Wedge Scanner or Keyboard fallback) */}
+                <form onSubmit={handleExecuteScan} className="space-y-2 bg-white p-3.5 rounded-xl border border-slate-200">
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase">Input NISN Manual (Wedge / Backup)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Masukkan atau tempel NISN siswa"
+                      value={scanInputNisn}
+                      onChange={(e) => setScanInputNisn(e.target.value)}
+                      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold font-mono text-slate-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Kirim
+                    </button>
+                  </div>
+                </form>
+
+                {scanMessage && (
+                  <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                    scanMessage.startsWith('ERROR') 
+                      ? 'bg-rose-50 border border-rose-200 text-rose-800' 
+                      : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                  }`}>
+                    <CheckCircle className={`h-4.5 w-4.5 shrink-0 ${scanMessage.startsWith('ERROR') ? 'text-rose-600' : 'text-emerald-600'}`} />
+                    <span className="leading-tight">{scanMessage}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: Scanned Logs during current session */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col h-[320px]">
+                <h4 className="font-extrabold text-xs text-slate-700 uppercase tracking-wide border-b border-slate-100 pb-2 flex items-center justify-between">
+                  <span>Log Pemindaian Hari Ini</span>
+                  <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-500 font-black">{scanLogs.length} Terpindai</span>
+                </h4>
+                
+                <div className="flex-1 overflow-y-auto mt-3 space-y-2 text-xs">
+                  {scanLogs.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 p-4 space-y-1">
+                      <Calendar className="h-8 w-8 text-slate-200" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Log Kosong</span>
+                      <p className="text-[9px] text-slate-400">Belum ada siswa yang melakukan pemindaian barcode dalam sesi ini.</p>
+                    </div>
+                  ) : (
+                    scanLogs.map((log, index) => (
+                      <div key={index} className="flex justify-between items-center bg-slate-50 hover:bg-slate-100 p-2.5 rounded-xl border border-slate-200/40 transition-all">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-slate-800 block">{log.name}</span>
+                          <span className="text-[9px] text-slate-400 block font-bold">Kelas {log.kelas} &bull; NISN: {log.nisn}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] font-black text-emerald-600 block">{log.status}</span>
+                          <span className="text-[9px] text-slate-400 font-mono block font-medium">{log.time}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowScanModal(false);
+                  setScanMessage(null);
+                  setScannedStudent(null);
+                }}
+                className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Tutup Scanner
+              </button>
             </div>
           </div>
         </div>

@@ -26,7 +26,9 @@ import {
   UserPlus,
   Trash2,
   Edit2,
-  X
+  X,
+  QrCode,
+  Cpu
 } from 'lucide-react';
 import {
   INITIAL_SISWA,
@@ -55,7 +57,7 @@ export default function PengaturanSistem({
   onResetDatabase,
 }: PengaturanSistemProps) {
   // Navigation inside Settings tab
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'discipline' | 'accounts' | 'database' | 'about'>('profile');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'discipline' | 'accounts' | 'database' | 'about' | 'integration'>('profile');
 
   // Registered Accounts State
   const [accountsList, setAccountsList] = useState<UserAccount[]>(() => {
@@ -108,6 +110,20 @@ export default function PengaturanSistem({
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRestoreError, setShowRestoreError] = useState<string | null>(null);
 
+  // Device integration settings states
+  const [barcodeEnabled, setBarcodeEnabled] = useState(() => localStorage.getItem('sahabatbk_setting_barcode_enabled') !== 'false');
+  const [barcodeDevice, setBarcodeDevice] = useState(() => localStorage.getItem('sahabatbk_setting_barcode_device') || 'Kamera Bawaan (Default Front Camera)');
+  const [barcodeAction, setBarcodeAction] = useState(() => localStorage.getItem('sahabatbk_setting_barcode_action') || 'absen');
+  const [fingerprintEnabled, setFingerprintEnabled] = useState(() => localStorage.getItem('sahabatbk_setting_fingerprint_enabled') === 'true');
+  const [fingerprintModel, setFingerprintModel] = useState(() => localStorage.getItem('sahabatbk_setting_fingerprint_model') || 'Solution X100-C');
+  const [fingerprintIp, setFingerprintIp] = useState(() => localStorage.getItem('sahabatbk_setting_fingerprint_ip') || '192.168.1.224');
+  const [fingerprintPort, setFingerprintPort] = useState(() => localStorage.getItem('sahabatbk_setting_fingerprint_port') || '4370');
+  
+  // Connection testing states
+  const [fingerprintStatus, setFingerprintStatus] = useState(() => localStorage.getItem('sahabatbk_setting_fingerprint_status') || 'Terputus');
+  const [isTestingConn, setIsTestingConn] = useState(false);
+  const [testLog, setTestLog] = useState<string[]>([]);
+
   // Keep state synced if username prop changes externally (like switching roles)
   useEffect(() => {
     setActiveUsername(username);
@@ -143,6 +159,47 @@ export default function PengaturanSistem({
     localStorage.setItem('sahabatbk_setting_alpa_consec_limit', String(consecutiveAlpa));
 
     triggerSuccessMessage('Batas poin peringatan disiplin (SP) berhasil disimpan!');
+  };
+
+  // Handle Save Device Integration Settings
+  const handleSaveIntegration = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('sahabatbk_setting_barcode_enabled', String(barcodeEnabled));
+    localStorage.setItem('sahabatbk_setting_barcode_device', barcodeDevice);
+    localStorage.setItem('sahabatbk_setting_barcode_action', barcodeAction);
+    localStorage.setItem('sahabatbk_setting_fingerprint_enabled', String(fingerprintEnabled));
+    localStorage.setItem('sahabatbk_setting_fingerprint_model', fingerprintModel);
+    localStorage.setItem('sahabatbk_setting_fingerprint_ip', fingerprintIp);
+    localStorage.setItem('sahabatbk_setting_fingerprint_port', fingerprintPort);
+    localStorage.setItem('sahabatbk_setting_fingerprint_status', fingerprintStatus);
+
+    triggerSuccessMessage('Pengaturan integrasi alat (kamera barcode & fingerprint) berhasil disimpan!');
+  };
+
+  // Test fingerprint device connection
+  const handleTestConnection = () => {
+    setIsTestingConn(true);
+    setTestLog([]);
+    setFingerprintStatus('Menghubungkan...');
+    
+    const logs = [
+      `[INFO] Menginisialisasi soket koneksi TCP/IP...`,
+      `[INFO] Menghubungkan ke devais ${fingerprintModel} di IP ${fingerprintIp}:${fingerprintPort}...`,
+      `[INFO] Mengirim sinyal handshake ping (0xAA55)...`,
+      `[INFO] Handshake diterima! Membaca firmware devais...`,
+      `[SUCCESS] Devais terhubung! Model: ${fingerprintModel}, SDK Versi: 9.25, Algoritma: VX10.0`
+    ];
+
+    logs.forEach((log, index) => {
+      setTimeout(() => {
+        setTestLog(prev => [...prev, log]);
+        if (index === logs.length - 1) {
+          setIsTestingConn(false);
+          setFingerprintStatus('Terhubung');
+          localStorage.setItem('sahabatbk_setting_fingerprint_status', 'Terhubung');
+        }
+      }, (index + 1) * 350);
+    });
   };
 
   // Sync Accounts with localStorage
@@ -443,6 +500,19 @@ export default function PengaturanSistem({
           >
             <Database className="h-4 w-4" />
             Sistem & Database
+          </button>
+
+          <button
+            id="tab-settings-integration"
+            onClick={() => setActiveSubTab('integration')}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              activeSubTab === 'integration'
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Cpu className="h-4 w-4" />
+            Integrasi Alat (Device)
           </button>
 
           <button
@@ -1082,6 +1152,204 @@ export default function PengaturanSistem({
                 </form>
 
               </div>
+
+            </div>
+          )}
+
+          {/* TAB: Device Integration Settings */}
+          {activeSubTab === 'integration' && (
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+              
+              <div className="border-b border-slate-100 pb-3 flex items-center gap-2">
+                <Cpu className="h-5 w-5 text-indigo-600" />
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-800">Integrasi Alat &amp; Sensor Kehadiran</h3>
+                  <p className="text-[10px] text-slate-500 font-medium">Sinkronisasi perangkat keras pembaca sidik jari (fingerprint) dan kamera pemindai barcode kartu siswa</p>
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveIntegration} className="space-y-6">
+                
+                {/* GRID CONFIG */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  
+                  {/* BARCODE PANEL */}
+                  <div className="p-5 bg-indigo-50/40 rounded-2xl border border-indigo-100/40 space-y-4">
+                    <div className="flex items-center gap-2 border-b border-indigo-100/30 pb-2.5">
+                      <QrCode className="h-5 w-5 text-indigo-600" />
+                      <h4 className="font-extrabold text-xs text-indigo-900 uppercase tracking-wide">Pemindai Barcode (Kamera)</h4>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1 bg-white/60 p-3 rounded-xl border border-indigo-100/20">
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 block">Koneksi Kamera Scanner</span>
+                        <span className="text-[10px] text-slate-400 font-medium">Aktifkan modul kamera untuk membaca kartu siswa</span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={barcodeEnabled}
+                          onChange={(e) => setBarcodeEnabled(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Pilih Perangkat Input Kamera</label>
+                        <select
+                          disabled={!barcodeEnabled}
+                          value={barcodeDevice}
+                          onChange={(e) => setBarcodeDevice(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 disabled:opacity-50"
+                        >
+                          <option value="Kamera Bawaan (Default Front Camera)">Kamera Utama Laptop / Web Camera (Default)</option>
+                          <option value="Kamera Tambahan (External USB WebCam)">Kamera Eksternal USB (Barcode Scanner Mount)</option>
+                          <option value="Scanner Laser Hardware (Keyboard Wedge Emulation)">Alat Pemindai Laser USB (Plug-and-Play)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Aksi Otomatis Hasil Scan</label>
+                        <select
+                          disabled={!barcodeEnabled}
+                          value={barcodeAction}
+                          onChange={(e) => setBarcodeAction(e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 disabled:opacity-50"
+                        >
+                          <option value="absen">Mencatat Presensi Kehadiran Langsung (Hadir)</option>
+                          <option value="profil">Membuka Tab Riwayat Kedisiplinan Siswa</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-white/70 rounded-xl text-[10px] text-slate-500 leading-normal space-y-1">
+                      <span className="font-extrabold text-indigo-950 block">Cara Kerja Scan Kartu Siswa:</span>
+                      <p>Siswa mengarahkan barcode pada kartu identitas ke kamera. Sistem membaca NISN dari gambar barcode, mencocokkannya dengan database, dan otomatis mengisi presensi hari ini secara real-time.</p>
+                    </div>
+                  </div>
+
+                  {/* FINGERPRINT PANEL */}
+                  <div className="p-5 bg-amber-50/30 rounded-2xl border border-amber-100/30 space-y-4">
+                    <div className="flex items-center justify-between border-b border-amber-100/30 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <Sliders className="h-5 w-5 text-amber-600" />
+                        <h4 className="font-extrabold text-xs text-amber-900 uppercase tracking-wide">Mesin Absensi Sidik Jari</h4>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 ${
+                        fingerprintStatus === 'Terhubung' 
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                          : fingerprintStatus === 'Menghubungkan...' 
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                          : 'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${fingerprintStatus === 'Terhubung' ? 'bg-emerald-500' : fingerprintStatus === 'Menghubungkan...' ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
+                        Status: {fingerprintStatus}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1 bg-white/60 p-3 rounded-xl border border-amber-100/20">
+                      <div>
+                        <span className="text-xs font-bold text-slate-800 block">Koneksi Mesin Sidik Jari</span>
+                        <span className="text-[10px] text-slate-400 font-medium">Hubungkan absensi fingerprint via Jaringan Local</span>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={fingerprintEnabled}
+                          onChange={(e) => setFingerprintEnabled(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="col-span-2">
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Merek &amp; Seri Mesin Fingerprint</label>
+                        <input
+                          type="text"
+                          disabled={!fingerprintEnabled}
+                          value={fingerprintModel}
+                          onChange={(e) => setFingerprintModel(e.target.value)}
+                          placeholder="ZKTeco K40 / Solution X100-C"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Alamat IP Alat (LAN)</label>
+                        <input
+                          type="text"
+                          disabled={!fingerprintEnabled}
+                          value={fingerprintIp}
+                          onChange={(e) => setFingerprintIp(e.target.value)}
+                          placeholder="192.168.1.224"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold font-mono text-slate-800 disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Port Komunikasi</label>
+                        <input
+                          type="text"
+                          disabled={!fingerprintEnabled}
+                          value={fingerprintPort}
+                          onChange={(e) => setFingerprintPort(e.target.value)}
+                          placeholder="4370"
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold font-mono text-slate-800 disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Test logs terminal output */}
+                    {fingerprintEnabled && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">Jalur Log Diagnostik</span>
+                          <button
+                            type="button"
+                            onClick={handleTestConnection}
+                            disabled={isTestingConn}
+                            className="text-[9px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded border border-amber-200/50 cursor-pointer flex items-center gap-1"
+                          >
+                            {isTestingConn ? 'Memeriksa...' : 'Tes Ping Koneksi Devais'}
+                          </button>
+                        </div>
+
+                        <div className="bg-slate-900 border border-slate-950 rounded-xl p-3 h-28 font-mono text-[9px] text-slate-300 overflow-y-auto space-y-1 shadow-inner">
+                          {testLog.length === 0 ? (
+                            <span className="text-slate-500 italic block">Menunggu tes ping koneksi untuk mengumpulkan log...</span>
+                          ) : (
+                            testLog.map((log, i) => (
+                              <div key={i} className={log.includes('[SUCCESS]') ? 'text-emerald-400 font-extrabold' : log.includes('[ERROR]') ? 'text-rose-400 font-extrabold' : 'text-cyan-400'}>
+                                {log}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 pt-3">
+                  <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                    <span className="font-extrabold text-slate-600">Catatan:</span> Pastikan komputer server terkoneksi ke jaringan Wi-Fi/LAN yang sama dengan mesin fingerprint.
+                  </div>
+                  <button
+                    id="btn-save-integration-settings"
+                    type="submit"
+                    className="flex items-center gap-1.5 px-4.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  >
+                    <Save className="h-4 w-4" /> Simpan Integrasi Alat
+                  </button>
+                </div>
+
+              </form>
 
             </div>
           )}

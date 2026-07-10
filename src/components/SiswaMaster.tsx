@@ -23,9 +23,14 @@ import {
   Download,
   Upload,
   FileSpreadsheet,
-  Check
+  Check,
+  QrCode,
+  IdCard,
+  Sliders,
+  GraduationCap
 } from 'lucide-react';
 import { exportSiswaToExcel, importSiswaFromExcel, downloadSiswaExcelTemplate } from '../lib/dataHelper';
+import { generateCode39Svg } from '../lib/barcodeHelper';
 
 interface SiswaMasterProps {
   role: UserRole;
@@ -33,6 +38,7 @@ interface SiswaMasterProps {
   siswaList: Siswa[];
   onAddSiswa: (siswa: Omit<Siswa, 'id' | 'totalPoin'>) => void;
   onUpdateSiswa: (siswa: Siswa) => void;
+  onBulkUpdateSiswa?: (updatedSiswaList: Siswa[]) => void;
   initialSelectedStudentId?: string;
 }
 
@@ -42,6 +48,7 @@ export default function SiswaMaster({
   siswaList,
   onAddSiswa,
   onUpdateSiswa,
+  onBulkUpdateSiswa,
   initialSelectedStudentId,
 }: SiswaMasterProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,9 +61,17 @@ export default function SiswaMaster({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
+  const [showCardPreview, setShowCardPreview] = useState(false);
+  const [showBulkClassModal, setShowBulkClassModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   
-  // CSV Import/Export Feedback State
+  // Selection states
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [bulkMode, setBulkMode] = useState<'class' | 'selected'>('class');
+  const [bulkSourceClass, setBulkSourceClass] = useState('');
+  const [bulkTargetClass, setBulkTargetClass] = useState('');
+  const [bulkSuccessMessage, setBulkSuccessMessage] = useState<string | null>(null);
+  
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
 
@@ -89,6 +104,53 @@ export default function SiswaMaster({
     setFormRiwayatMedis(student.riwayatMedis);
     setFormFotoUrl(student.fotoUrl || '');
     setShowEditModal(true);
+  };
+
+  const handleExecuteBulkUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onBulkUpdateSiswa) return;
+
+    if (bulkMode === 'class') {
+      if (!bulkSourceClass.trim() || !bulkTargetClass.trim()) {
+        alert('Mohon masukkan kelas asal dan kelas tujuan!');
+        return;
+      }
+      const studentsToUpdate = siswaList.filter(s => s.kelas.trim().toUpperCase() === bulkSourceClass.trim().toUpperCase());
+      if (studentsToUpdate.length === 0) {
+        alert(`Tidak ditemukan siswa aktif di kelas "${bulkSourceClass.toUpperCase()}"!`);
+        return;
+      }
+      const updated = studentsToUpdate.map(s => ({
+        ...s,
+        kelas: bulkTargetClass.trim().toUpperCase()
+      }));
+      onBulkUpdateSiswa(updated);
+      setBulkSuccessMessage(`Sukses! ${studentsToUpdate.length} siswa dari kelas ${bulkSourceClass.trim().toUpperCase()} dipindahkan ke kelas ${bulkTargetClass.trim().toUpperCase()}.`);
+    } else {
+      if (selectedStudentIds.length === 0) {
+        alert('Tidak ada siswa terpilih! Centang siswa di tabel terlebih dahulu.');
+        return;
+      }
+      if (!bulkTargetClass.trim()) {
+        alert('Mohon tentukan kelas tujuan!');
+        return;
+      }
+      const studentsToUpdate = siswaList.filter(s => selectedStudentIds.includes(s.id));
+      const updated = studentsToUpdate.map(s => ({
+        ...s,
+        kelas: bulkTargetClass.trim().toUpperCase()
+      }));
+      onBulkUpdateSiswa(updated);
+      setBulkSuccessMessage(`Sukses! ${studentsToUpdate.length} siswa terpilih dipindahkan ke kelas ${bulkTargetClass.trim().toUpperCase()}.`);
+      setSelectedStudentIds([]); // Reset checklist
+    }
+
+    setBulkSourceClass('');
+    setBulkTargetClass('');
+    setTimeout(() => {
+      setBulkSuccessMessage(null);
+      setShowBulkClassModal(false);
+    }, 2500);
   };
 
   const handleSaveAdd = (e: React.FormEvent) => {
@@ -247,6 +309,18 @@ export default function SiswaMaster({
 
           {role === 'GURU_BK' && (
             <button
+              id="btn-bulk-class-modal-trigger"
+              onClick={() => setShowBulkClassModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl text-xs font-bold border border-amber-200 transition-all cursor-pointer shadow-xs"
+              title="Atur Kelas Massal atau Naik Kelas Satu Angkatan"
+            >
+              <Sliders className="h-3.5 w-3.5 text-amber-600" />
+              <span>Atur Kelas Massal</span>
+            </button>
+          )}
+
+          {role === 'GURU_BK' && (
+            <button
               id="btn-add-siswa"
               onClick={() => { resetForm(); setShowAddModal(true); }}
               className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
@@ -299,12 +373,56 @@ export default function SiswaMaster({
             )}
           </div>
 
+          {/* Floating Bulk Action Bar */}
+          {selectedStudentIds.length > 0 && role === 'GURU_BK' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white">
+                  {selectedStudentIds.length}
+                </span>
+                <p className="text-xs text-amber-950 font-bold">
+                  Siswa terpilih untuk tindakan massal.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowBulkClassModal(true)}
+                  className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-extrabold shadow-xs transition-colors cursor-pointer"
+                >
+                  Ubah Kelas ({selectedStudentIds.length} Siswa)
+                </button>
+                <button
+                  onClick={() => setSelectedStudentIds([])}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-500 border border-slate-200 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Table Container */}
           <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-100">
                 <thead className="bg-slate-50">
                   <tr>
+                    {role === 'GURU_BK' && (
+                      <th scope="col" className="px-4 py-3 text-center w-10">
+                        <input
+                          type="checkbox"
+                          checked={filteredStudents.length > 0 && selectedStudentIds.length === filteredStudents.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStudentIds(filteredStudents.map(s => s.id));
+                            } else {
+                              setSelectedStudentIds([]);
+                            }
+                          }}
+                          className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        />
+                      </th>
+                    )}
                     <th scope="col" className="px-5 py-3 text-left text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Siswa</th>
                     <th scope="col" className="px-5 py-3 text-left text-[10px] font-extrabold uppercase tracking-wider text-slate-500">NISN</th>
                     <th scope="col" className="px-5 py-3 text-left text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Kelas</th>
@@ -323,6 +441,22 @@ export default function SiswaMaster({
                           selectedStudent?.id === siswa.id ? 'bg-indigo-50/50 hover:bg-indigo-50/80' : 'hover:bg-slate-50'
                         }`}
                       >
+                        {role === 'GURU_BK' && (
+                          <td className="px-4 py-3 text-center w-10" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedStudentIds.includes(siswa.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedStudentIds(prev => [...prev, siswa.id]);
+                                } else {
+                                  setSelectedStudentIds(prev => prev.filter(id => id !== siswa.id));
+                                }
+                              }}
+                              className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                            />
+                          </td>
+                        )}
                         <td className="whitespace-nowrap px-5 py-3">
                           <div className="flex items-center gap-3">
                             <img
@@ -361,7 +495,7 @@ export default function SiswaMaster({
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="text-center py-10 text-xs text-slate-400 font-medium bg-slate-50/50">
+                      <td colSpan={role === 'GURU_BK' ? 6 : 5} className="text-center py-10 text-xs text-slate-400 font-medium bg-slate-50/50">
                         Tidak ada siswa yang sesuai dengan filter pencarian.
                       </td>
                     </tr>
@@ -492,6 +626,15 @@ export default function SiswaMaster({
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-xl text-xs font-bold transition-all border border-indigo-100 cursor-pointer"
                 >
                   <Printer className="h-4 w-4" /> Cetak Biografi/Profil (PDF)
+                </button>
+
+                {/* Print Student Card Button */}
+                <button
+                  id="btn-print-student-card"
+                  onClick={() => setShowCardPreview(true)}
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition-all border border-emerald-100 cursor-pointer mt-2"
+                >
+                  <IdCard className="h-4 w-4 text-emerald-600" /> Cetak Kartu Siswa (Barcode)
                 </button>
 
               </div>
@@ -1129,6 +1272,322 @@ export default function SiswaMaster({
               >
                 Tutup
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- ⭐ BULK CLASS UPDATE MODAL --- */}
+      {showBulkClassModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 w-full max-w-lg flex flex-col overflow-hidden animate-scale-up">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                <Sliders className="h-5 w-5 text-amber-600" />
+                <span>Atur Kelas Massal & Pemindahan Siswa</span>
+              </h3>
+              <button 
+                onClick={() => setShowBulkClassModal(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleExecuteBulkUpdate}>
+              <div className="p-6 space-y-4">
+                {bulkSuccessMessage ? (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold flex items-center gap-2.5">
+                    <Check className="h-5 w-5 text-emerald-600" />
+                    <span>{bulkSuccessMessage}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex bg-slate-100 p-1 rounded-lg">
+                      <button
+                        type="button"
+                        onClick={() => setBulkMode('class')}
+                        className={`flex-1 text-center py-2 text-xs font-bold rounded-md transition-all ${
+                          bulkMode === 'class' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                        }`}
+                      >
+                        Pindahkan Satu Kelas
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBulkMode('selected')}
+                        className={`flex-1 text-center py-2 text-xs font-bold rounded-md transition-all ${
+                          bulkMode === 'selected' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                        }`}
+                      >
+                        Pindahkan Siswa Terpilih ({selectedStudentIds.length})
+                      </button>
+                    </div>
+
+                    {bulkMode === 'class' ? (
+                      <div className="space-y-3">
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Gunakan opsi ini untuk memindahkan/menaikan seluruh siswa dari satu kelas asal ke kelas baru sekaligus (misal: memindahkan seluruh siswa Kelas 7A ke Kelas 8A).
+                        </p>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">Kelas Asal (Saat Ini)</label>
+                          <select
+                            value={bulkSourceClass}
+                            onChange={(e) => setBulkSourceClass(e.target.value)}
+                            className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-1 focus:ring-indigo-500"
+                          >
+                            <option value="">-- Pilih Kelas Asal --</option>
+                            {Array.from(new Set(siswaList.map(s => s.kelas))).sort().map(cls => (
+                              <option key={cls} value={cls}>Kelas {cls}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Memindahkan siswa yang telah Anda centang di tabel sebelah kiri secara massal.
+                        </p>
+                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/50 max-h-32 overflow-y-auto text-xs text-slate-700 space-y-1">
+                          {selectedStudentIds.length === 0 ? (
+                            <span className="text-slate-400 italic font-semibold">Belum ada siswa terpilih. Silakan centang siswa pada tabel di belakang modal ini.</span>
+                          ) : (
+                            siswaList.filter(s => selectedStudentIds.includes(s.id)).map(s => (
+                              <div key={s.id} className="flex justify-between items-center bg-white px-2.5 py-1 rounded border border-slate-100">
+                                <span className="font-bold">{s.nama}</span>
+                                <span className="text-[10px] text-slate-400 font-mono">Kelas {s.kelas}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Kelas Tujuan (Baru)</label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: VIII-A, IX-IPA-2"
+                        value={bulkTargetClass}
+                        onChange={(e) => setBulkTargetClass(e.target.value)}
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-1 focus:ring-indigo-500"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {!bulkSuccessMessage && (
+                <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowBulkClassModal(false)}
+                    className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  >
+                    Eksekusi Pemindahan
+                  </button>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- ⭐ STUDENT CARD PREVIEW MODAL WITH SCAN-READY BARCODE --- */}
+      {showCardPreview && selectedStudent && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-2xl flex flex-col overflow-hidden animate-scale-up">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-extrabold text-slate-800 text-xs flex items-center gap-2">
+                <IdCard className="h-4 w-4 text-emerald-600" />
+                <span>Cetak Kartu Tanda Siswa (SMP NEGERI 3 KRAS)</span>
+              </h3>
+              <button 
+                onClick={() => setShowCardPreview(false)}
+                className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Print Area */}
+            <div className="p-6 overflow-y-auto max-h-[70vh] flex flex-col items-center gap-6 bg-slate-100/50" id="print-siswa-card-area">
+              
+              <div className="text-center text-[10px] text-slate-400 font-bold max-w-md">
+                Gunakan tombol cetak di bawah untuk mencetak kartu. Kartu di bawah berukuran standar ID Card (85mm x 55mm) bolak-balik.
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+                
+                {/* --- FRONT OF CARD --- */}
+                <div className="w-[330px] h-[210px] bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 text-white rounded-2xl p-4 shadow-xl relative overflow-hidden border border-indigo-500/30 flex flex-col justify-between shrink-0">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                  <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
+                  
+                  {/* Card Header */}
+                  <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                    <div className="h-7 w-7 bg-white rounded-md flex items-center justify-center shrink-0">
+                      <GraduationCap className="h-4 w-4 text-indigo-900" />
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-black uppercase tracking-wider leading-none">SMP NEGERI 3 KRAS</h4>
+                      <p className="text-[7px] text-indigo-200 font-semibold tracking-wide mt-0.5 uppercase">KARTU IDENTITAS SISWA</p>
+                    </div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="flex gap-3 my-2 items-center">
+                    <img
+                      src={selectedStudent.fotoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'}
+                      alt={selectedStudent.nama}
+                      className="h-[80px] w-[65px] object-cover rounded-md border border-white/10 shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="space-y-1.5 text-left">
+                      <div>
+                        <span className="text-[7px] text-indigo-300 font-bold block uppercase leading-none">Nama Lengkap</span>
+                        <span className="text-[11px] font-black tracking-tight leading-tight block truncate w-[190px]">{selectedStudent.nama}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[7px] text-indigo-300 font-bold block uppercase leading-none">NISN</span>
+                          <span className="text-[9px] font-bold font-mono tracking-wider">{selectedStudent.nisn}</span>
+                        </div>
+                        <div>
+                          <span className="text-[7px] text-indigo-300 font-bold block uppercase leading-none">Kelas</span>
+                          <span className="text-[9px] font-bold">{selectedStudent.kelas}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="flex justify-between items-end border-t border-white/10 pt-1.5 text-[6px] text-indigo-200">
+                    <div>
+                      <span className="font-bold block text-[5px] uppercase">Alamat</span>
+                      <span className="truncate block w-[160px] font-medium">{selectedStudent.alamat}</span>
+                    </div>
+                    <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider text-[5px]">
+                      Siswa Aktif
+                    </span>
+                  </div>
+                </div>
+
+                {/* --- BACK OF CARD --- */}
+                <div className="w-[330px] h-[210px] bg-white text-slate-800 rounded-2xl p-4 shadow-xl border border-slate-200 flex flex-col justify-between shrink-0 relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-5 flex items-center justify-center pointer-events-none">
+                    <GraduationCap className="h-32 w-32 text-indigo-900" />
+                  </div>
+
+                  {/* Rules title */}
+                  <div className="text-left">
+                    <h5 className="text-[8px] font-black text-indigo-950 uppercase tracking-wider leading-none">KETENTUAN KARTU</h5>
+                    <ul className="text-[6.5px] text-slate-500 list-decimal pl-3 mt-1.5 space-y-0.5 leading-tight font-medium">
+                      <li>Kartu ini adalah kartu identitas resmi siswa SMP Negeri 3 Kras.</li>
+                      <li>Wajib dibawa setiap hari dan digunakan untuk scan barcode kehadiran.</li>
+                      <li>Kartu tidak boleh dicoret-coret, dilipat, atau dipindahtangankan.</li>
+                      <li>Jika hilang, segera laporkan ke Guru BK / Tata Usaha Sekolah.</li>
+                    </ul>
+                  </div>
+
+                  {/* Scan Area with Barcode */}
+                  <div className="flex flex-col items-center justify-center bg-slate-50 p-2.5 rounded-xl border border-slate-100 my-1">
+                    <div className="w-full max-w-[200px] flex justify-center">
+                      {(() => {
+                        const barcode = generateCode39Svg(selectedStudent.nisn, 36);
+                        return (
+                          <svg
+                            viewBox={`0 0 ${barcode.width} 36`}
+                            width="100%"
+                            height="36"
+                            dangerouslySetInnerHTML={{ __html: barcode.rectsHtml }}
+                          />
+                        );
+                      })()}
+                    </div>
+                    <span className="text-[8px] font-bold font-mono tracking-widest text-slate-600 mt-1 uppercase">
+                      * {selectedStudent.nisn} *
+                    </span>
+                  </div>
+
+                  {/* Signature Area */}
+                  <div className="flex justify-between items-end">
+                    <div className="text-[5.5px] text-slate-400 font-bold uppercase tracking-wider">
+                      SahabatBK System &copy; 2026
+                    </div>
+                    <div className="text-right leading-none shrink-0">
+                      <span className="text-[6px] font-bold text-slate-500 block">Kediri, {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      <span className="text-[6px] font-black text-indigo-950 uppercase block mt-0.5">Kepala Sekolah,</span>
+                      <div className="h-6 flex items-center justify-end relative">
+                        <div className="absolute right-2 -top-1 w-7 h-7 border border-emerald-500/20 rounded-full flex items-center justify-center text-[5px] text-emerald-500 font-bold rotate-12 bg-white/40 pointer-events-none scale-90 uppercase">SMPN3</div>
+                        <span className="text-[7px] font-black text-indigo-900 underline z-10">Dr. H. Mulyono, M.Si.</span>
+                      </div>
+                      <span className="text-[5.5px] text-slate-400 font-bold block">NIP: 196805121994031005</span>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+
+            {/* Actions Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[10px] text-slate-500 font-bold">
+                Tips: Gunakan kertas tebal / kertas PVC Card saat mencetak kartu ini.
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCardPreview(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Tutup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const printContents = document.getElementById('print-siswa-card-area')?.innerHTML;
+                    if (printContents) {
+                      const printWindow = window.open('', '_blank');
+                      if (printWindow) {
+                        printWindow.document.write(`
+                          <html>
+                            <head>
+                              <title>Cetak Kartu Siswa - ${selectedStudent.nama}</title>
+                              <script src="https://cdn.tailwindcss.com"></script>
+                              <style>
+                                @media print {
+                                  body { background: white; margin: 0; padding: 20px; }
+                                  .no-print { display: none; }
+                                }
+                              </style>
+                            </head>
+                            <body onload="window.print(); window.close();">
+                              <div class="flex flex-col items-center gap-8 py-8">
+                                ${printContents}
+                              </div>
+                            </body>
+                          </html>
+                        `);
+                        printWindow.document.close();
+                      } else {
+                        window.print();
+                      }
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                >
+                  <Printer className="h-4 w-4" />
+                  <span>Cetak Sekarang (PDF / Printer)</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
