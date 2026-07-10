@@ -3,8 +3,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import QRCode from 'qrcode';
 import { Siswa, UserRole } from '../types';
+
+// Helper component for generating offline QR Code ("barcode kotak")
+function StudentQrCode({ value, size = 68 }: { value: string; size?: number }) {
+  const [qrUrl, setQrUrl] = useState<string>('');
+
+  useEffect(() => {
+    QRCode.toDataURL(value, {
+      margin: 1,
+      width: size * 3, // High resolution for beautiful printing
+      color: {
+        dark: '#0f172a', // Deep slate/black
+        light: '#ffffff'
+      }
+    })
+      .then(url => setQrUrl(url))
+      .catch(err => console.error('Error generating QR Code:', err));
+  }, [value, size]);
+
+  if (!qrUrl) {
+    return <div className="animate-pulse bg-slate-200 rounded-lg" style={{ width: size, height: size }} />;
+  }
+
+  return (
+    <img
+      src={qrUrl}
+      alt={`QR Code ${value}`}
+      style={{ width: size, height: size }}
+      className="object-contain rounded-lg border border-slate-200 shadow-xs"
+    />
+  );
+}
 import {
   Search,
   Plus,
@@ -1490,26 +1522,16 @@ export default function SiswaMaster({
                     <h5 className="text-[8px] font-black text-indigo-950 uppercase tracking-wider leading-none">KETENTUAN KARTU</h5>
                     <ul className="text-[6.5px] text-slate-500 list-decimal pl-3 mt-1.5 space-y-0.5 leading-tight font-medium">
                       <li>Kartu ini adalah kartu identitas resmi siswa SMP Negeri 3 Kras.</li>
-                      <li>Wajib dibawa setiap hari dan digunakan untuk scan barcode kehadiran.</li>
+                      <li>Wajib dibawa setiap hari dan digunakan untuk scan QR/barcode kehadiran.</li>
                       <li>Kartu tidak boleh dicoret-coret, dilipat, atau dipindahtangankan.</li>
                       <li>Jika hilang, segera laporkan ke Guru BK / Tata Usaha Sekolah.</li>
                     </ul>
                   </div>
 
                   {/* Scan Area with Barcode */}
-                  <div className="flex flex-col items-center justify-center bg-slate-50 p-2.5 rounded-xl border border-slate-100 my-1">
-                    <div className="w-full max-w-[200px] flex justify-center">
-                      {(() => {
-                        const barcode = generateCode39Svg(selectedStudent.nisn, 36);
-                        return (
-                          <svg
-                            viewBox={`0 0 ${barcode.width} 36`}
-                            width="100%"
-                            height="36"
-                            dangerouslySetInnerHTML={{ __html: barcode.rectsHtml }}
-                          />
-                        );
-                      })()}
+                  <div className="flex flex-col items-center justify-center bg-slate-50 p-2 rounded-xl border border-slate-100 my-1">
+                    <div className="flex justify-center my-0.5">
+                      <StudentQrCode value={selectedStudent.nisn} size={64} />
                     </div>
                     <span className="text-[8px] font-bold font-mono tracking-widest text-slate-600 mt-1 uppercase">
                       * {selectedStudent.nisn} *

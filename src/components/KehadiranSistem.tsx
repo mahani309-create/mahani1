@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Kehadiran, UserRole, Siswa } from '../types';
 import {
   AlertTriangle,
@@ -57,6 +57,7 @@ export default function KehadiranSistem({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isScannerRunning, setIsScannerRunning] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const lastScannedRef = useRef<{ code: string; time: number } | null>(null);
 
   // Sound generator for checkout style barcode beep
   const playBeepSound = () => {
@@ -85,6 +86,13 @@ export default function KehadiranSistem({
   const processScannedText = (decodedText: string) => {
     const trimmedNisn = decodedText.trim();
     if (!trimmedNisn) return;
+
+    // Check if recently scanned to avoid duplicate scanning noise/beep loops
+    const now = Date.now();
+    if (lastScannedRef.current && lastScannedRef.current.code === trimmedNisn && now - lastScannedRef.current.time < 3500) {
+      return; // Ignore repetitive scans of same code within 3.5 seconds
+    }
+    lastScannedRef.current = { code: trimmedNisn, time: now };
 
     const student = siswaList.find(s => s.nisn === trimmedNisn || s.id === trimmedNisn);
 
@@ -159,12 +167,33 @@ export default function KehadiranSistem({
       if (!element) return;
 
       try {
-        const qrCodeInstance = new Html5Qrcode('reader');
+        // Optimize constructor to explicitly search for QR_CODE, CODE_39, CODE_128 formats
+        const qrCodeInstance = new Html5Qrcode('reader', {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8
+          ],
+          verbose: false
+        });
         scannerRef.current = qrCodeInstance;
         setIsScannerRunning(true);
 
         const devices = await Html5Qrcode.getCameras();
         if (!isMounted) return;
+
+        // Common scan configuration: square target box and 1.0 aspect ratio
+        const scanConfig = {
+          fps: 20,
+          qrbox: (width: number, height: number) => {
+            const minDim = Math.min(width, height);
+            const boxSize = Math.floor(minDim * 0.72); // 72% of minimum screen dimension
+            return { width: boxSize, height: boxSize }; // Perfect square scanning box
+          },
+          aspectRatio: 1.0 // Request square stream geometry if camera supports it
+        };
 
         if (devices && devices.length > 0) {
           setCameraList(devices);
@@ -178,11 +207,7 @@ export default function KehadiranSistem({
           
           await qrCodeInstance.start(
             defaultCam.id,
-            {
-              fps: 15,
-              qrbox: (width, height) => ({ width: Math.min(width, 280), height: Math.min(height, 160) }),
-              aspectRatio: 1.777778
-            },
+            scanConfig,
             (decodedText) => {
               playBeepSound();
               processScannedText(decodedText);
@@ -193,10 +218,7 @@ export default function KehadiranSistem({
           // Fallback to environment facingMode
           await qrCodeInstance.start(
             { facingMode: 'environment' },
-            {
-              fps: 15,
-              qrbox: { width: 250, height: 150 }
-            },
+            scanConfig,
             (decodedText) => {
               playBeepSound();
               processScannedText(decodedText);
@@ -237,9 +259,13 @@ export default function KehadiranSistem({
         await scannerRef.current.start(
           cameraId,
           {
-            fps: 15,
-            qrbox: (width, height) => ({ width: Math.min(width, 280), height: Math.min(height, 160) }),
-            aspectRatio: 1.777778
+            fps: 20,
+            qrbox: (width: number, height: number) => {
+              const minDim = Math.min(width, height);
+              const boxSize = Math.floor(minDim * 0.72);
+              return { width: boxSize, height: boxSize };
+            },
+            aspectRatio: 1.0
           },
           (decodedText) => {
             playBeepSound();
@@ -845,9 +871,9 @@ export default function KehadiranSistem({
                 )}
 
                 {/* Video Viewport Container */}
-                <div className="relative bg-slate-950 aspect-video rounded-2xl border border-slate-800 overflow-hidden shadow-inner flex flex-col justify-center">
+                <div className="relative bg-slate-950 aspect-square w-full max-w-[280px] mx-auto rounded-2xl border border-slate-800 overflow-hidden shadow-inner flex flex-col justify-center">
                   {/* Target element for html5-qrcode library rendering */}
-                  <div id="reader" className="w-full h-full overflow-hidden" style={{ minHeight: '190px' }}></div>
+                  <div id="reader" className="w-full h-full overflow-hidden" style={{ minHeight: '220px' }}></div>
                   
                   {/* Custom frame aesthetic overlay */}
                   <div className="absolute inset-0 pointer-events-none border border-emerald-500/10 rounded-2xl" />
