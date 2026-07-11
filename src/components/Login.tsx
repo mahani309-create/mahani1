@@ -306,34 +306,6 @@ export default function Login({ onLogin }: LoginProps) {
             </div>
           </form>
 
-          {/* Default Credentials Info Box */}
-          {!error && (
-            <div className="mt-6 p-4 bg-slate-50 border border-slate-200/60 rounded-xl text-xs space-y-2">
-              <div className="flex items-center gap-1.5 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-                <Info className="h-4 w-4 text-indigo-600 shrink-0" /> Petunjuk Akun Bawaan (Default)
-              </div>
-              <p className="text-slate-500 text-[11px] leading-relaxed">
-                Gunakan akun bawaan di bawah ini untuk masuk secara manual ke dalam sistem:
-              </p>
-              <div className="space-y-1.5 font-medium text-slate-700 text-[11px] pt-1 border-t border-slate-200/50">
-                <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
-                  <span><strong>Guru BK:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">sri</code></span>
-                  <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">123456</code></span>
-                </div>
-                <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
-                  <span><strong>Wali Kelas:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">ahmad123</code></span>
-                  <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">password123</code></span>
-                </div>
-                <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
-                  <span><strong>Kepala Sekolah:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">kepsek</code></span>
-                  <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">123456</code></span>
-                </div>
-              </div>
-            </div>
-          )}
-
-
-
           {/* Developer Credit */}
           <div className="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-400">
             <p>Sistem Informasi Bimbingan Konseling</p>

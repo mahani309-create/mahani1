@@ -98,6 +98,11 @@ export default function PengaturanSistem({
   const [counselorNip, setCounselorNip] = useState(() => localStorage.getItem('sahabatbk_setting_counselor_nip') || '197410042003122002');
   const [activeUsername, setActiveUsername] = useState(username);
 
+  // Logos & Default Photo States
+  const [logoDaerah, setLogoDaerah] = useState(() => localStorage.getItem('sahabatbk_setting_logo_daerah') || '');
+  const [logoSekolah, setLogoSekolah] = useState(() => localStorage.getItem('sahabatbk_setting_logo_sekolah') || '');
+  const [defaultFotoSiswa, setDefaultFotoSiswa] = useState(() => localStorage.getItem('sahabatbk_setting_default_foto_siswa') || '');
+
   // Form states - SP Thresholds
   const [sp1, setSp1] = useState(() => Number(localStorage.getItem('sahabatbk_setting_sp1_limit') || '50'));
   const [sp2, setSp2] = useState(() => Number(localStorage.getItem('sahabatbk_setting_sp2_limit') || '100'));
@@ -130,6 +135,26 @@ export default function PengaturanSistem({
     setActiveUsername(username);
   }, [username]);
 
+  // Handle Logo Upload to Base64
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'daerah' | 'sekolah' | 'siswa') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 800 * 1024) {
+      alert('Ukuran berkas terlalu besar! Maksimal 800KB agar penyimpanan lokal browser tidak penuh.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (type === 'daerah') setLogoDaerah(base64);
+      if (type === 'sekolah') setLogoSekolah(base64);
+      if (type === 'siswa') setDefaultFotoSiswa(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
   // Handle Save Profile & School
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,12 +164,20 @@ export default function PengaturanSistem({
     localStorage.setItem('sahabatbk_setting_principal_nip', principalNip);
     localStorage.setItem('sahabatbk_setting_counselor_nip', counselorNip);
     
+    // Save visual identity
+    localStorage.setItem('sahabatbk_setting_logo_daerah', logoDaerah);
+    localStorage.setItem('sahabatbk_setting_logo_sekolah', logoSekolah);
+    localStorage.setItem('sahabatbk_setting_default_foto_siswa', defaultFotoSiswa);
+
     if (activeUsername.trim()) {
       onUpdateUsername(activeUsername.trim());
       localStorage.setItem('sahabatbk_username', activeUsername.trim());
     }
 
-    triggerSuccessMessage('Profil sekolah dan pengguna berhasil diperbarui!');
+    // Dispatch global event so other components update their views immediately
+    window.dispatchEvent(new Event('sahabatbk_settings_updated'));
+
+    triggerSuccessMessage('Profil sekolah, logo kop, dan foto default siswa berhasil diperbarui!');
   };
 
   // Handle Save SP Thresholds
@@ -635,6 +668,130 @@ export default function PengaturanSistem({
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                     required
                   />
+                </div>
+
+                {/* Visual Media Upload Section */}
+                <div className="border-t border-slate-100 pt-5 space-y-4">
+                  <div>
+                    <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider">Identitas Visual & Media</h4>
+                    <p className="text-[10px] text-slate-500 mt-0.5">Unggah logo Pemda, logo sekolah untuk dipasang pada kop surat, serta foto default profil siswa.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Logo Daerah */}
+                    <div className="border border-slate-100 bg-slate-50 p-4 rounded-xl flex flex-col justify-between space-y-3">
+                      <div>
+                        <span className="text-[10px] font-extrabold text-slate-600 uppercase block mb-0.5">Logo Daerah / Instansi</span>
+                        <p className="text-[9px] text-slate-400">Tampil di sisi kiri Kop Surat (Kop laporan resmi)</p>
+                      </div>
+
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 bg-white rounded-lg p-3 min-h-[100px]">
+                        {logoDaerah ? (
+                          <div className="flex flex-col items-center">
+                            <img src={logoDaerah} alt="Logo Daerah" className="max-h-[70px] max-w-[70px] object-contain rounded shadow-xs" />
+                            <button
+                              type="button"
+                              onClick={() => setLogoDaerah('')}
+                              className="mt-2 text-[9px] text-red-600 hover:text-red-700 hover:underline font-bold"
+                            >
+                              Hapus Logo
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <div className="mx-auto w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mb-1 text-slate-400 text-xs font-bold">L</div>
+                            <span className="text-[9px] text-slate-400 font-semibold block">Menggunakan Default</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <label className="w-full text-center py-2 px-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10px] font-bold cursor-pointer transition-colors block">
+                        Pilih Gambar
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleLogoUpload(e, 'daerah')}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Logo Sekolah */}
+                    <div className="border border-slate-100 bg-slate-50 p-4 rounded-xl flex flex-col justify-between space-y-3">
+                      <div>
+                        <span className="text-[10px] font-extrabold text-slate-600 uppercase block mb-0.5">Logo Sekolah</span>
+                        <p className="text-[9px] text-slate-400">Tampil di sisi kanan Kop Surat (Kop laporan resmi)</p>
+                      </div>
+
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 bg-white rounded-lg p-3 min-h-[100px]">
+                        {logoSekolah ? (
+                          <div className="flex flex-col items-center">
+                            <img src={logoSekolah} alt="Logo Sekolah" className="max-h-[70px] max-w-[70px] object-contain rounded shadow-xs" />
+                            <button
+                              type="button"
+                              onClick={() => setLogoSekolah('')}
+                              className="mt-2 text-[9px] text-red-600 hover:text-red-700 hover:underline font-bold"
+                            >
+                              Hapus Logo
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <div className="mx-auto w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mb-1 text-slate-400 text-xs font-bold">S</div>
+                            <span className="text-[9px] text-slate-400 font-semibold block">Menggunakan Default</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <label className="w-full text-center py-2 px-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10px] font-bold cursor-pointer transition-colors block">
+                        Pilih Gambar
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleLogoUpload(e, 'sekolah')}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Default Foto Siswa */}
+                    <div className="border border-slate-100 bg-slate-50 p-4 rounded-xl flex flex-col justify-between space-y-3">
+                      <div>
+                        <span className="text-[10px] font-extrabold text-slate-600 uppercase block mb-0.5">Foto Profil Default Siswa</span>
+                        <p className="text-[9px] text-slate-400">Dipasang otomatis jika siswa tidak memiliki foto khusus</p>
+                      </div>
+
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 bg-white rounded-lg p-3 min-h-[100px]">
+                        {defaultFotoSiswa ? (
+                          <div className="flex flex-col items-center">
+                            <img src={defaultFotoSiswa} alt="Default Foto Siswa" className="max-h-[70px] max-w-[70px] object-contain rounded shadow-xs" />
+                            <button
+                              type="button"
+                              onClick={() => setDefaultFotoSiswa('')}
+                              className="mt-2 text-[9px] text-red-600 hover:text-red-700 hover:underline font-bold"
+                            >
+                              Hapus Foto
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <div className="mx-auto w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center mb-1 text-slate-400 text-xs font-bold">👤</div>
+                            <span className="text-[9px] text-slate-400 font-semibold block">Unsplash (Awal)</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <label className="w-full text-center py-2 px-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-[10px] font-bold cursor-pointer transition-colors block">
+                        Pilih Gambar
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleLogoUpload(e, 'siswa')}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex justify-end pt-2">

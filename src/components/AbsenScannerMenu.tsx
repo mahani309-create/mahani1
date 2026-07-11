@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Siswa, Kehadiran, AbsenSiswaLog, UserRole } from '../types';
+import { getStudentPhoto } from '../lib/dataHelper';
 import {
   QrCode,
   Camera,
@@ -609,6 +610,8 @@ export default function AbsenScannerMenu({
     const counselorName = localStorage.getItem('sahabatbk_setting_counselor_name') || 'Sri Rahayu, S.Pd';
     const counselorNip = localStorage.getItem('sahabatbk_setting_counselor_nip') || 'NIP. 19820315 200801 2 007';
     const teacherName = localStorage.getItem('sahabatbk_username') || 'Guru Kelas / Piket';
+    const logoDaerahUrl = localStorage.getItem('sahabatbk_setting_logo_daerah') || '';
+    const logoSekolahUrl = localStorage.getItem('sahabatbk_setting_logo_sekolah') || '';
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -650,11 +653,14 @@ export default function AbsenScannerMenu({
           <title>Laporan Presensi Kehadiran Siswa - ${selectedDate}</title>
           <style>
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; }
-            .header-container { display: flex; align-items: center; border-bottom: 3px double #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo-placeholder { width: 80px; height: 80px; background-color: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; }
-            .header-text { flex-grow: 1; }
-            .header-text h1 { font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 0.5px; }
-            .header-text p { font-size: 11px; margin: 0 0 3px 0; color: #475569; }
+            .header-container { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px double #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
+            .kop-logo-left { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+            .kop-logo-right { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; margin-left: 15px; }
+            .kop-logo-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+            .kop-logo-placeholder { width: 70px; height: 70px; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #64748b; text-align: center; }
+            .header-text { flex-grow: 1; text-align: center; }
+            .header-text h1 { font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0 0 3px 0; letter-spacing: 0.5px; }
+            .header-text p { font-size: 10px; margin: 0 0 2px 0; color: #475569; }
             .report-title { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 25px; text-transform: uppercase; text-decoration: underline; }
             .meta-table { width: 100%; font-size: 12px; margin-bottom: 25px; }
             .meta-table td { padding: 4px 0; }
@@ -669,13 +675,22 @@ export default function AbsenScannerMenu({
         </head>
         <body>
           <div class="header-container">
-            <div class="logo-placeholder">TUT WURI</div>
+            <div class="kop-logo-left">
+              ${logoDaerahUrl 
+                ? `<img src="${logoDaerahUrl}" class="kop-logo-img" />` 
+                : `<div class="kop-logo-placeholder">LOGO DAERAH</div>`}
+            </div>
             <div class="header-text">
               <h1>PEMERINTAH KABUPATEN KEDIRI</h1>
               <h1>DINAS PENDIDIKAN DAN KEBUDAYAAN</h1>
               <h1 style="color: #312e81;">${schoolName}</h1>
               <p>${schoolAddress}</p>
               <p style="font-weight: bold; color: #1e293b;">Kecamatan Kras, Kabupaten Kediri - POS 64172</p>
+            </div>
+            <div class="kop-logo-right">
+              ${logoSekolahUrl 
+                ? `<img src="${logoSekolahUrl}" class="kop-logo-img" />` 
+                : `<div class="kop-logo-placeholder">TUT WURI</div>`}
             </div>
           </div>
 
@@ -754,6 +769,8 @@ export default function AbsenScannerMenu({
     const counselorName = localStorage.getItem('sahabatbk_setting_counselor_name') || 'Sri Rahayu, S.Pd';
     const counselorNip = localStorage.getItem('sahabatbk_setting_counselor_nip') || 'NIP. 19820315 200801 2 007';
     const teacherName = localStorage.getItem('sahabatbk_username') || 'Guru Kelas / Piket';
+    const logoDaerahUrl = localStorage.getItem('sahabatbk_setting_logo_daerah') || '';
+    const logoSekolahUrl = localStorage.getItem('sahabatbk_setting_logo_sekolah') || '';
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -787,11 +804,14 @@ export default function AbsenScannerMenu({
           <title>Laporan Siswa Terlambat - ${selectedDate}</title>
           <style>
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; }
-            .header-container { display: flex; align-items: center; border-bottom: 3px double #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo-placeholder { width: 80px; height: 80px; background-color: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; }
-            .header-text { flex-grow: 1; }
-            .header-text h1 { font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 0.5px; }
-            .header-text p { font-size: 11px; margin: 0 0 3px 0; color: #475569; }
+            .header-container { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px double #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
+            .kop-logo-left { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+            .kop-logo-right { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; margin-left: 15px; }
+            .kop-logo-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+            .kop-logo-placeholder { width: 70px; height: 70px; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #64748b; text-align: center; }
+            .header-text { flex-grow: 1; text-align: center; }
+            .header-text h1 { font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0 0 3px 0; letter-spacing: 0.5px; }
+            .header-text p { font-size: 10px; margin: 0 0 2px 0; color: #475569; }
             .report-title { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 25px; text-transform: uppercase; text-decoration: underline; }
             .meta-table { width: 100%; font-size: 12px; margin-bottom: 25px; }
             .meta-table td { padding: 4px 0; }
@@ -806,13 +826,22 @@ export default function AbsenScannerMenu({
         </head>
         <body>
           <div class="header-container">
-            <div class="logo-placeholder">TUT WURI</div>
+            <div class="kop-logo-left">
+              ${logoDaerahUrl 
+                ? `<img src="${logoDaerahUrl}" class="kop-logo-img" />` 
+                : `<div class="kop-logo-placeholder">LOGO DAERAH</div>`}
+            </div>
             <div class="header-text">
               <h1>PEMERINTAH KABUPATEN KEDIRI</h1>
               <h1>DINAS PENDIDIKAN DAN KEBUDAYAAN</h1>
               <h1 style="color: #312e81;">${schoolName}</h1>
               <p>${schoolAddress}</p>
               <p style="font-weight: bold; color: #1e293b;">Kecamatan Kras, Kabupaten Kediri - POS 64172</p>
+            </div>
+            <div class="kop-logo-right">
+              ${logoSekolahUrl 
+                ? `<img src="${logoSekolahUrl}" class="kop-logo-img" />` 
+                : `<div class="kop-logo-placeholder">TUT WURI</div>`}
             </div>
           </div>
 
@@ -891,6 +920,8 @@ export default function AbsenScannerMenu({
     const counselorName = localStorage.getItem('sahabatbk_setting_counselor_name') || 'Sri Rahayu, S.Pd';
     const counselorNip = localStorage.getItem('sahabatbk_setting_counselor_nip') || 'NIP. 19820315 200801 2 007';
     const teacherName = localStorage.getItem('sahabatbk_username') || 'Guru Kelas / Piket';
+    const logoDaerahUrl = localStorage.getItem('sahabatbk_setting_logo_daerah') || '';
+    const logoSekolahUrl = localStorage.getItem('sahabatbk_setting_logo_sekolah') || '';
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -924,11 +955,14 @@ export default function AbsenScannerMenu({
           <title>Laporan Siswa Belum Absen - ${selectedDate}</title>
           <style>
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; }
-            .header-container { display: flex; align-items: center; border-bottom: 3px double #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo-placeholder { width: 80px; height: 80px; background-color: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 20px; }
-            .header-text { flex-grow: 1; }
-            .header-text h1 { font-size: 20px; font-weight: 800; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 0.5px; }
-            .header-text p { font-size: 11px; margin: 0 0 3px 0; color: #475569; }
+            .header-container { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px double #1e293b; padding-bottom: 20px; margin-bottom: 30px; }
+            .kop-logo-left { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
+            .kop-logo-right { width: 75px; height: 75px; display: flex; align-items: center; justify-content: center; margin-left: 15px; }
+            .kop-logo-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+            .kop-logo-placeholder { width: 70px; height: 70px; background-color: #f1f5f9; border: 1px dashed #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; color: #64748b; text-align: center; }
+            .header-text { flex-grow: 1; text-align: center; }
+            .header-text h1 { font-size: 16px; font-weight: 800; text-transform: uppercase; margin: 0 0 3px 0; letter-spacing: 0.5px; }
+            .header-text p { font-size: 10px; margin: 0 0 2px 0; color: #475569; }
             .report-title { text-align: center; font-size: 15px; font-weight: bold; margin-bottom: 25px; text-transform: uppercase; text-decoration: underline; }
             .meta-table { width: 100%; font-size: 12px; margin-bottom: 25px; }
             .meta-table td { padding: 4px 0; }
@@ -943,13 +977,22 @@ export default function AbsenScannerMenu({
         </head>
         <body>
           <div class="header-container">
-            <div class="logo-placeholder">TUT WURI</div>
+            <div class="kop-logo-left">
+              ${logoDaerahUrl 
+                ? `<img src="${logoDaerahUrl}" class="kop-logo-img" />` 
+                : `<div class="kop-logo-placeholder">LOGO DAERAH</div>`}
+            </div>
             <div class="header-text">
               <h1>PEMERINTAH KABUPATEN KEDIRI</h1>
               <h1>DINAS PENDIDIKAN DAN KEBUDAYAAN</h1>
               <h1 style="color: #312e81;">${schoolName}</h1>
               <p>${schoolAddress}</p>
               <p style="font-weight: bold; color: #1e293b;">Kecamatan Kras, Kabupaten Kediri - POS 64172</p>
+            </div>
+            <div class="kop-logo-right">
+              ${logoSekolahUrl 
+                ? `<img src="${logoSekolahUrl}" class="kop-logo-img" />` 
+                : `<div class="kop-logo-placeholder">TUT WURI</div>`}
             </div>
           </div>
 
@@ -1114,7 +1157,7 @@ export default function AbsenScannerMenu({
             {scannedStudent && (
               <div className="bg-emerald-50/70 border border-emerald-200/60 rounded-2xl p-3.5 flex items-center gap-3 animate-fade-in shadow-xs">
                 <img 
-                  src={scannedStudent.fotoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'} 
+                  src={getStudentPhoto(scannedStudent.fotoUrl)} 
                   alt={scannedStudent.nama}
                   className="h-12 w-12 object-cover rounded-full border border-emerald-500 shadow-sm"
                 />

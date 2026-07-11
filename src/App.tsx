@@ -86,10 +86,7 @@ export default function App() {
   });
 
   // Navigation Tabs state
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    const role = localStorage.getItem('sahabatbk_role');
-    return role === 'WALI_KELAS' ? 'Data Master Siswa' : 'Dashboard';
-  });
+  const [activeTab, setActiveTab] = useState<string>('Dashboard');
   const [selectedStudentIdFromAlert, setSelectedStudentIdFromAlert] = useState<string | undefined>(undefined);
 
   // Mobile menu toggle
@@ -122,7 +119,7 @@ export default function App() {
     setCurrentUsername(username);
     setKelasWali(targetKelasWali);
     setIsLoggedIn(true);
-    setActiveTab(role === 'WALI_KELAS' ? 'Data Master Siswa' : 'Dashboard');
+    setActiveTab('Dashboard');
 
     localStorage.setItem('sahabatbk_logged_in', 'true');
     localStorage.setItem('sahabatbk_role', role);
@@ -285,18 +282,12 @@ export default function App() {
   }
 
   // Sidebar Menu Items
-  const menuItems = currentUserRole === 'WALI_KELAS' ? [
-    { name: 'Data Master Siswa', icon: Users },
-    { name: 'Rekap Pelanggaran', icon: AlertTriangle },
-    { name: 'Rekap Kehadiran', icon: ClipboardCheck },
-    { name: 'Absen QR & Barcode', icon: QrCode },
-  ] : currentUserRole === 'GURU_PIKET' ? [
+  const menuItems = (currentUserRole === 'WALI_KELAS' || currentUserRole === 'GURU_PIKET') ? [
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'Data Master Siswa', icon: Users },
     { name: 'Rekap Pelanggaran', icon: AlertTriangle },
     { name: 'Rekap Kehadiran', icon: ClipboardCheck },
     { name: 'Absen QR & Barcode', icon: QrCode },
-    { name: 'Pengaturan', icon: Settings },
   ] : [
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'Data Master Siswa', icon: Users },
@@ -466,6 +457,7 @@ export default function App() {
               onUpdateSiswa={handleUpdateSiswa}
               onBulkUpdateSiswa={handleBulkUpdateSiswa}
               initialSelectedStudentId={selectedStudentIdFromAlert}
+              pelanggaranList={pelanggaranList}
             />
           )}
 

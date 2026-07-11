@@ -6,6 +6,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Kehadiran, UserRole, Siswa } from '../types';
+import { getStudentPhoto } from '../lib/dataHelper';
 import {
   AlertTriangle,
   Search,
@@ -916,7 +917,7 @@ export default function KehadiranSistem({
                 {scannedStudent && (
                   <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-3 flex items-center gap-3 animate-fade-in">
                     <img 
-                      src={scannedStudent.fotoUrl || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'} 
+                      src={getStudentPhoto(scannedStudent.fotoUrl)} 
                       alt={scannedStudent.nama}
                       className="h-11 w-11 object-cover rounded-full border border-emerald-500"
                     />

@@ -208,3 +208,25 @@ export function exportBimbinganToExcel(bimbinganList: BimbinganLog[]) {
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Jurnal Bimbingan');
   XLSX.writeFile(workbook, `SahabatBK_Jurnal_Bimbingan_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
+
+/**
+ * Resolves a student's photo URL with appropriate fallbacks.
+ * First priority: Student's custom photo URL (if not matching default Unsplash male avatar).
+ * Second priority: System default profile photo uploaded in settings.
+ * Third priority: Hardcoded default Unsplash avatar.
+ */
+export function getStudentPhoto(fotoUrl?: string): string {
+  const defaultSettingPhoto = localStorage.getItem('sahabatbk_setting_default_foto_siswa');
+  const fallbackUnsplash = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200';
+  
+  if (fotoUrl && fotoUrl.trim() !== '' && !fotoUrl.includes('unsplash.com/photo-1535713875002-d1d0cf377fde')) {
+    return fotoUrl;
+  }
+  
+  if (defaultSettingPhoto && defaultSettingPhoto.trim() !== '') {
+    return defaultSettingPhoto;
+  }
+  
+  return fallbackUnsplash;
+}
+

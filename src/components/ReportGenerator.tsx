@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Siswa, Pelanggaran, Kehadiran, BimbinganLog, UserRole } from '../types';
 import {
   FileText,
@@ -42,6 +42,23 @@ export default function ReportGenerator({
   // Generating state simulation
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedReport, setGeneratedReport] = useState<any | null>(null);
+
+  // Logo and School Name States for dynamic Kop Surat
+  const [logoDaerahUrl, setLogoDaerahUrl] = useState(() => localStorage.getItem('sahabatbk_setting_logo_daerah') || '');
+  const [logoSekolahUrl, setLogoSekolahUrl] = useState(() => localStorage.getItem('sahabatbk_setting_logo_sekolah') || '');
+  const [schoolName, setSchoolName] = useState(() => localStorage.getItem('sahabatbk_setting_school_name') || 'SMP NEGERI 3 KRAS');
+  const [schoolAddress, setSchoolAddress] = useState(() => localStorage.getItem('sahabatbk_setting_school_address') || 'Jl. Raya Kras, Kediri, Jawa Timur');
+
+  useEffect(() => {
+    const syncLogos = () => {
+      setLogoDaerahUrl(localStorage.getItem('sahabatbk_setting_logo_daerah') || '');
+      setLogoSekolahUrl(localStorage.getItem('sahabatbk_setting_logo_sekolah') || '');
+      setSchoolName(localStorage.getItem('sahabatbk_setting_school_name') || 'SMP NEGERI 3 KRAS');
+      setSchoolAddress(localStorage.getItem('sahabatbk_setting_school_address') || 'Jl. Raya Kras, Kediri, Jawa Timur');
+    };
+    window.addEventListener('sahabatbk_settings_updated', syncLogos);
+    return () => window.removeEventListener('sahabatbk_settings_updated', syncLogos);
+  }, []);
 
   // Month labels
   const monthLabel = useMemo(() => {
@@ -299,15 +316,37 @@ export default function ReportGenerator({
                 
                 {/* Official SMP NEGERI 3 KRAS Kop Surat */}
                 <div>
-                  <div className="text-center border-b-2 border-slate-900 pb-4 mb-6">
-                    <h2 className="font-extrabold text-base text-slate-900 uppercase">Pemerintah Kabupaten Kediri</h2>
-                    <h1 className="font-black text-lg text-slate-900 uppercase">SMP NEGERI 3 KRAS</h1>
-                    <p className="text-[9px] text-slate-500 font-medium italic">
-                      Jl. Raya Kras, Kediri, Jawa Timur &bull; Telp: (0354) 441000
-                    </p>
-                    <p className="text-[10px] text-slate-700 font-bold mt-1.5 uppercase tracking-wider">
-                      Unit Pelaksana Teknis Bimbingan dan Konseling (BK)
-                    </p>
+                  <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-6">
+                    {/* Left Logo */}
+                    <div className="w-[60px] h-[60px] flex items-center justify-center flex-shrink-0">
+                      {logoDaerahUrl ? (
+                        <img src={logoDaerahUrl} alt="Logo Daerah" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <div className="w-[50px] h-[50px] bg-slate-50 border border-slate-200 border-dashed rounded-full flex items-center justify-center text-[8px] font-bold text-slate-400 text-center leading-tight">Logo Daerah</div>
+                      )}
+                    </div>
+
+                    {/* Center Text */}
+                    <div className="flex-1 text-center px-4">
+                      <h2 className="font-extrabold text-[11px] text-slate-900 uppercase tracking-tight">Pemerintah Kabupaten Kediri</h2>
+                      <h2 className="font-extrabold text-[11px] text-slate-900 uppercase tracking-tight">Dinas Pendidikan Dan Kebudayaan</h2>
+                      <h1 className="font-black text-sm text-slate-900 uppercase tracking-wide">{schoolName}</h1>
+                      <p className="text-[8px] text-slate-500 font-medium italic mt-0.5">
+                        {schoolAddress} &bull; Telp: (0354) 441000
+                      </p>
+                      <p className="text-[9px] text-slate-700 font-bold mt-1 uppercase tracking-wider">
+                        Unit Pelaksana Teknis Bimbingan dan Konseling (BK)
+                      </p>
+                    </div>
+
+                    {/* Right Logo */}
+                    <div className="w-[60px] h-[60px] flex items-center justify-center flex-shrink-0">
+                      {logoSekolahUrl ? (
+                        <img src={logoSekolahUrl} alt="Logo Sekolah" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <div className="w-[50px] h-[50px] bg-slate-50 border border-slate-200 border-dashed rounded-full flex items-center justify-center text-[8px] font-bold text-slate-400 text-center leading-tight">TUT WURI</div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Title */}
