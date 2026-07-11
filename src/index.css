@@ -51,6 +51,11 @@
     page-break-inside: avoid !important;
   }
 
+  .page-break-after-always {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
   /* Optimize table layout for printing */
   table {
     page-break-inside: auto !important;

@@ -1221,10 +1221,10 @@ export default function SiswaMaster({
             </div>
 
             {/* Document body optimized for typical A4 multi-page/single-sheet printing */}
-            <div className="flex-1 overflow-y-auto p-8 print:p-0 bg-slate-100 print:bg-white flex justify-center">
-              <div className="print-paper-sheet bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] relative flex flex-col justify-between text-slate-800">
-                
-                {/* School Kop Surat */}
+            <div className="flex-1 overflow-y-auto p-8 print:p-0 bg-slate-100 print:bg-white flex flex-col items-center gap-8 print:gap-0">
+              
+              {/* --- HALAMAN 1 --- */}
+              <div className="print-paper-sheet page-break-after-always bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] relative flex flex-col justify-between text-slate-800">
                 <div className="w-full">
                   <div className="text-center border-b-2 border-slate-900 pb-4 mb-6 break-inside-avoid">
                     <h2 className="font-extrabold text-lg text-slate-900 uppercase tracking-wide">Pemerintah Kabupaten Kediri</h2>
@@ -1317,97 +1317,130 @@ export default function SiswaMaster({
                         {selectedStudent.riwayatMedis || 'Tidak ada catatan kondisi khusus atau riwayat medis.'}
                       </div>
                     </div>
+                  </div>
+                </div>
 
-                    {/* Academic Point summary */}
-                    <div className="space-y-4">
-                      <div className="break-inside-avoid space-y-2">
-                        <h4 className="text-[11px] font-extrabold text-slate-900 bg-slate-100 px-2 py-1 uppercase tracking-wider border-l-4 border-slate-700">III. Catatan Kedisiplinan & Poin Pelanggaran</h4>
-                        
-                        <table className="min-w-full text-xs text-center border border-slate-300">
-                          <thead>
-                            <tr className="bg-slate-100 border-b border-slate-300">
-                              <th className="py-1.5 border-r border-slate-300 font-bold text-slate-700 w-1/3">Total Poin Terakumulasi</th>
-                              <th className="py-1.5 border-r border-slate-300 font-bold text-slate-700 w-1/3">Status Peringatan</th>
-                              <th className="py-1.5 font-bold text-slate-700 w-1/3">Kategori Status Siswa</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr className="border-b border-slate-300">
-                              <td className="py-2 border-r border-slate-300 font-black text-slate-900 text-sm">
-                                {selectedStudent.totalPoin} Poin
-                              </td>
-                              <td className={`py-2 border-r border-slate-300 font-extrabold ${
-                                selectedStudent.totalPoin >= 100 ? 'text-red-700' : selectedStudent.totalPoin >= 50 ? 'text-amber-700' : 'text-emerald-700'
-                              }`}>
-                                {selectedStudent.totalPoin >= 150 ? 'SP 3 (Mendesak!)' : selectedStudent.totalPoin >= 100 ? 'SP 2' : selectedStudent.totalPoin >= 50 ? 'SP 1' : 'Aman (Hijau)'}
-                              </td>
-                              <td className="py-2 font-bold text-slate-800">
-                                Siswa {selectedStudent.status}
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
+                {/* Footer Halaman 1 */}
+                <div className="border-t border-slate-200 pt-3 text-center text-[9px] text-slate-400 font-semibold flex justify-between items-center break-inside-avoid mt-4">
+                  <span>Layanan BK SMPN 3 Kras - SahabatBK</span>
+                  <span>Halaman 1 dari 2</span>
+                </div>
+              </div>
 
-                      {/* Detail Pelanggaran if points > 0 */}
-                      {selectedStudent.totalPoin > 0 && (
-                        <div className="mt-4">
-                          <p className="text-[10px] font-extrabold text-slate-800 mb-1.5 uppercase tracking-wide flex items-center gap-1 break-inside-avoid">&bull; Rincian Riwayat & Detail Pelanggaran Siswa:</p>
-                          <table className="min-w-full text-[10px] border border-slate-300 text-left">
-                            <thead>
-                              <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-bold break-inside-avoid">
-                                <th className="px-2 py-1.5 border-r border-slate-300 text-center w-8">No</th>
-                                <th className="px-2 py-1.5 border-r border-slate-300 w-24">Tanggal Pelanggaran</th>
-                                <th className="px-2 py-1.5 border-r border-slate-300">Jenis / Nama Pelanggaran</th>
-                                <th className="px-2 py-1.5 border-r border-slate-300 text-center w-16">Poin</th>
-                                <th className="px-2 py-1.5">Catatan/Keterangan Penanganan BK</th>
+              {/* --- HALAMAN 2 --- */}
+              <div className="print-paper-sheet bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] relative flex flex-col justify-between text-slate-800">
+                <div className="w-full">
+                  {/* Compact Header for Page 2 */}
+                  <div className="text-center border-b-2 border-slate-900 pb-3 mb-6 break-inside-avoid">
+                    <h2 className="font-extrabold text-xs text-slate-500 uppercase tracking-wide">Pemerintah Kabupaten Kediri &bull; Dinas Pendidikan</h2>
+                    <h1 className="font-black text-sm text-slate-800 uppercase tracking-wider">SMP NEGERI 3 KRAS - LAYANAN BK</h1>
+                    <p className="text-[9px] text-slate-400 italic mt-0.5">
+                      Lembar Lanjutan: Catatan Kedisiplinan & Poin Pelanggaran Siswa
+                    </p>
+                  </div>
+
+                  {/* Document Subtitle */}
+                  <div className="mb-6 break-inside-avoid pb-1 border-b border-slate-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-slate-600">Siswa: <strong className="text-slate-950 text-xs font-black uppercase">{selectedStudent.nama}</strong> ({selectedStudent.kelas})</span>
+                      <span className="text-[9px] text-slate-500">No. Reg: {selectedStudent.id.toUpperCase()}</span>
+                    </div>
+                  </div>
+
+                  {/* Academic Point summary */}
+                  <div className="space-y-4">
+                    <div className="break-inside-avoid space-y-2">
+                      <h4 className="text-[11px] font-extrabold text-slate-900 bg-slate-100 px-2 py-1 uppercase tracking-wider border-l-4 border-slate-700">III. Catatan Kedisiplinan & Poin Pelanggaran</h4>
+                      
+                      <table className="min-w-full text-xs text-center border border-slate-300">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-300">
+                            <th className="py-1.5 border-r border-slate-300 font-bold text-slate-700 w-1/3">Total Poin Terakumulasi</th>
+                            <th className="py-1.5 border-r border-slate-300 font-bold text-slate-700 w-1/3">Status Peringatan</th>
+                            <th className="py-1.5 font-bold text-slate-700 w-1/3">Kategori Status Siswa</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-slate-300">
+                            <td className="py-2 border-r border-slate-300 font-black text-slate-900 text-sm">
+                              {selectedStudent.totalPoin} Poin
+                            </td>
+                            <td className={`py-2 border-r border-slate-300 font-extrabold ${
+                              selectedStudent.totalPoin >= 100 ? 'text-red-700' : selectedStudent.totalPoin >= 50 ? 'text-amber-700' : 'text-emerald-700'
+                            }`}>
+                              {selectedStudent.totalPoin >= 150 ? 'SP 3 (Mendesak!)' : selectedStudent.totalPoin >= 100 ? 'SP 2' : selectedStudent.totalPoin >= 50 ? 'SP 1' : 'Aman (Hijau)'}
+                            </td>
+                            <td className="py-2 font-bold text-slate-800">
+                              Siswa {selectedStudent.status}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Detail Pelanggaran if points > 0 */}
+                    <div className="mt-4">
+                      <p className="text-[10px] font-extrabold text-slate-800 mb-1.5 uppercase tracking-wide flex items-center gap-1 break-inside-avoid">&bull; Rincian Riwayat & Detail Pelanggaran Siswa:</p>
+                      <table className="min-w-full text-[10px] border border-slate-300 text-left">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-bold break-inside-avoid">
+                            <th className="px-2 py-1.5 border-r border-slate-300 text-center w-8">No</th>
+                            <th className="px-2 py-1.5 border-r border-slate-300 w-24">Tanggal Pelanggaran</th>
+                            <th className="px-2 py-1.5 border-r border-slate-300">Jenis / Nama Pelanggaran</th>
+                            <th className="px-2 py-1.5 border-r border-slate-300 text-center w-16">Poin</th>
+                            <th className="px-2 py-1.5">Catatan/Keterangan Penanganan BK</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-300 text-slate-800">
+                          {selectedStudentViolations.length > 0 ? (
+                            selectedStudentViolations.map((pel, index) => (
+                              <tr key={pel.id || index} className="hover:bg-slate-50/55 break-inside-avoid">
+                                <td className="px-2 py-1.5 border-r border-slate-300 text-center font-bold">{index + 1}</td>
+                                <td className="px-2 py-1.5 border-r border-slate-300 font-semibold">
+                                  {new Date(pel.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </td>
+                                <td className="px-2 py-1.5 border-r border-slate-300 font-extrabold text-slate-900">{pel.jenis}</td>
+                                <td className="px-2 py-1.5 border-r border-slate-300 text-center font-black text-rose-600">+{pel.poin}</td>
+                                <td className="px-2 py-1.5 text-slate-600 italic text-[9.5px] leading-snug">{pel.catatan || '-'}</td>
                               </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-300 text-slate-800">
-                              {selectedStudentViolations.length > 0 ? (
-                                selectedStudentViolations.map((pel, index) => (
-                                  <tr key={pel.id || index} className="hover:bg-slate-50/55 break-inside-avoid">
-                                    <td className="px-2 py-1.5 border-r border-slate-300 text-center font-bold">{index + 1}</td>
-                                    <td className="px-2 py-1.5 border-r border-slate-300 font-semibold">
-                                      {new Date(pel.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                    </td>
-                                    <td className="px-2 py-1.5 border-r border-slate-300 font-extrabold text-slate-900">{pel.jenis}</td>
-                                    <td className="px-2 py-1.5 border-r border-slate-300 text-center font-black text-rose-600">+{pel.poin}</td>
-                                    <td className="px-2 py-1.5 text-slate-600 italic text-[9.5px] leading-snug">{pel.catatan || '-'}</td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr className="break-inside-avoid">
-                                  <td colSpan={5} className="px-2 py-2 text-center text-slate-400 italic">
-                                    Rincian riwayat pelanggaran belum terekam di sistem data master.
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
+                            ))
+                          ) : (
+                            <tr className="break-inside-avoid">
+                              <td colSpan={5} className="px-2 py-2 text-center text-slate-400 italic">
+                                Rincian riwayat pelanggaran belum terekam di sistem data master.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
 
-                {/* Signatures Row */}
-                <div className="grid grid-cols-2 text-xs text-center pt-6 mt-8 border-t border-dashed border-slate-300 break-inside-avoid print:mt-12">
-                  <div>
-                    <p className="font-semibold text-slate-500">Mengetahui,</p>
-                    <p className="font-bold text-slate-800 mb-14">Wali Kelas {selectedStudent.kelas}</p>
-                    <p className="font-extrabold text-slate-900 underline">..................................................</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. .........................................</p>
+                {/* Signatures and Footer Page 2 */}
+                <div className="w-full mt-auto">
+                  <div className="grid grid-cols-2 text-xs text-center pt-6 mt-8 border-t border-dashed border-slate-300 break-inside-avoid print:mt-12">
+                    <div>
+                      <p className="font-semibold text-slate-500">Mengetahui,</p>
+                      <p className="font-bold text-slate-800 mb-14">Wali Kelas {selectedStudent.kelas}</p>
+                      <p className="font-extrabold text-slate-900 underline">..................................................</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">NIP. .........................................</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-500">Kras, {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      <p className="font-bold text-slate-800 mb-14">Kepala Unit Layanan BK</p>
+                      <p className="font-extrabold text-slate-900 underline">Dra. Endang Sulastri, M.Pd.</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19780412 199903 2 001</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-semibold text-slate-500">Kras, {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    <p className="font-bold text-slate-800 mb-14">Kepala Unit Layanan BK</p>
-                    <p className="font-extrabold text-slate-900 underline">Dra. Endang Sulastri, M.Pd.</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19780412 199903 2 001</p>
+
+                  <div className="border-t border-slate-200 pt-3 mt-6 text-center text-[9px] text-slate-400 font-semibold flex justify-between items-center break-inside-avoid">
+                    <span>Layanan BK SMPN 3 Kras - SahabatBK</span>
+                    <span>Halaman 2 dari 2</span>
                   </div>
                 </div>
-
               </div>
+
             </div>
           </div>
         </div>
