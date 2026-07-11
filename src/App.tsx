@@ -23,6 +23,7 @@ import BimbinganKonseling from './components/BimbinganKonseling';
 import ReportGenerator from './components/ReportGenerator';
 import LaporanRekapBK from './components/LaporanRekapBK';
 import PengaturanSistem from './components/PengaturanSistem';
+import AbsenScannerMenu from './components/AbsenScannerMenu';
 
 // Icon imports
 import {
@@ -39,7 +40,8 @@ import {
   Menu,
   X,
   FileText,
-  Settings
+  Settings,
+  QrCode
 } from 'lucide-react';
 
 export default function App() {
@@ -84,7 +86,10 @@ export default function App() {
   });
 
   // Navigation Tabs state
-  const [activeTab, setActiveTab] = useState<string>('Dashboard');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const role = localStorage.getItem('sahabatbk_role');
+    return role === 'WALI_KELAS' ? 'Data Master Siswa' : 'Dashboard';
+  });
   const [selectedStudentIdFromAlert, setSelectedStudentIdFromAlert] = useState<string | undefined>(undefined);
 
   // Mobile menu toggle
@@ -117,6 +122,7 @@ export default function App() {
     setCurrentUsername(username);
     setKelasWali(targetKelasWali);
     setIsLoggedIn(true);
+    setActiveTab(role === 'WALI_KELAS' ? 'Data Master Siswa' : 'Dashboard');
 
     localStorage.setItem('sahabatbk_logged_in', 'true');
     localStorage.setItem('sahabatbk_role', role);
@@ -279,11 +285,24 @@ export default function App() {
   }
 
   // Sidebar Menu Items
-  const menuItems = [
+  const menuItems = currentUserRole === 'WALI_KELAS' ? [
+    { name: 'Data Master Siswa', icon: Users },
+    { name: 'Rekap Pelanggaran', icon: AlertTriangle },
+    { name: 'Rekap Kehadiran', icon: ClipboardCheck },
+    { name: 'Absen QR & Barcode', icon: QrCode },
+  ] : currentUserRole === 'GURU_PIKET' ? [
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'Data Master Siswa', icon: Users },
     { name: 'Rekap Pelanggaran', icon: AlertTriangle },
     { name: 'Rekap Kehadiran', icon: ClipboardCheck },
+    { name: 'Absen QR & Barcode', icon: QrCode },
+    { name: 'Pengaturan', icon: Settings },
+  ] : [
+    { name: 'Dashboard', icon: LayoutDashboard },
+    { name: 'Data Master Siswa', icon: Users },
+    { name: 'Rekap Pelanggaran', icon: AlertTriangle },
+    { name: 'Rekap Kehadiran', icon: ClipboardCheck },
+    { name: 'Absen QR & Barcode', icon: QrCode },
     { name: 'Bimbingan & Konseling', icon: BookOpen },
     { name: 'Laporan & Rekap BK', icon: FileText },
     { name: 'Report Generator', icon: Printer },
@@ -466,6 +485,16 @@ export default function App() {
               kelasWali={kelasWali}
               kehadiranList={kehadiranList}
               siswaList={siswaList}
+              onUpdateKehadiran={handleUpdateKehadiran}
+            />
+          )}
+
+          {activeTab === 'Absen QR & Barcode' && (
+            <AbsenScannerMenu
+              role={currentUserRole}
+              kelasWali={kelasWali}
+              siswaList={siswaList}
+              kehadiranList={kehadiranList}
               onUpdateKehadiran={handleUpdateKehadiran}
             />
           )}

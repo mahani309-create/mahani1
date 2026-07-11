@@ -186,12 +186,12 @@ export default function PelanggaranSistem({
         </div>
       )}
 
-      {/* Grid: Form Input (Only Guru BK) & Table logs */}
+      {/* Grid: Form Input (Only Guru BK & Piket) & Table logs */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column: Form Input (Guru BK only) */}
+        {/* Left Column: Form Input (Guru BK/Piket) */}
         <div className="lg:col-span-1">
-          {role === 'GURU_BK' ? (
+          {role === 'GURU_BK' || role === 'GURU_PIKET' ? (
             <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-100 pb-3 mb-1">
                 <div className="h-8 w-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-700">
@@ -199,7 +199,7 @@ export default function PelanggaranSistem({
                 </div>
                 <div>
                   <h3 className="font-extrabold text-sm text-slate-800">Input Pelanggaran Baru</h3>
-                  <p className="text-[10px] text-slate-500">Form otentik khusus Guru BK</p>
+                  <p className="text-[10px] text-slate-500">Form khusus Guru BK / Piket</p>
                 </div>
               </div>
 
@@ -292,9 +292,9 @@ export default function PelanggaranSistem({
               <div className="h-9 w-9 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5" />
               </div>
-              <h3 className="font-bold text-xs text-indigo-900 uppercase tracking-wider">Akses Terbatas: Hanya Guru BK</h3>
+              <h3 className="font-bold text-xs text-indigo-900 uppercase tracking-wider">Akses Terbatas: Hanya Guru BK / Piket</h3>
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                Sebagai <strong>{role === 'WALI_KELAS' ? 'Wali Kelas' : 'Kepala Sekolah'}</strong>, Anda memiliki izin melihat riwayat pelanggaran dan mendownload surat. Namun, input penambahan poin baru secara konstitusional hanya boleh dilakukan oleh Guru BK demi keadilan dan keabsahan berkas bimbingan.
+                Sebagai <strong>{role === 'WALI_KELAS' ? 'Wali Kelas' : 'Kepala Sekolah'}</strong>, Anda memiliki izin melihat riwayat pelanggaran dan mendownload surat. Namun, input penambahan poin baru harian secara konstitusional hanya boleh dilakukan oleh Guru BK atau Guru Piket demi keadilan dan keabsahan berkas bimbingan.
               </p>
             </div>
           )}
@@ -482,7 +482,7 @@ export default function PelanggaranSistem({
 
             {/* Document Preview Area */}
             <div className="flex-1 overflow-y-auto p-8 print:p-0 bg-slate-100 print:bg-white flex justify-center">
-              <div className="bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] flex flex-col justify-between text-slate-800">
+              <div className="print-paper-sheet bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] flex flex-col justify-between text-slate-800">
                 
                 {/* School Letterhead (Kop Surat) */}
                 <div>

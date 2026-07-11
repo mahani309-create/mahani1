@@ -103,6 +103,7 @@ export default function PengaturanSistem({
   const [sp2, setSp2] = useState(() => Number(localStorage.getItem('sahabatbk_setting_sp2_limit') || '100'));
   const [sp3, setSp3] = useState(() => Number(localStorage.getItem('sahabatbk_setting_sp3_limit') || '150'));
   const [consecutiveAlpa, setConsecutiveAlpa] = useState(() => Number(localStorage.getItem('sahabatbk_setting_alpa_consec_limit') || '3'));
+  const [jamBatasAbsen, setJamBatasAbsen] = useState(() => localStorage.getItem('sahabatbk_setting_jam_batas_absen') || '07:15');
 
   // Notification and Status States
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
@@ -157,8 +158,9 @@ export default function PengaturanSistem({
     localStorage.setItem('sahabatbk_setting_sp2_limit', String(sp2));
     localStorage.setItem('sahabatbk_setting_sp3_limit', String(sp3));
     localStorage.setItem('sahabatbk_setting_alpa_consec_limit', String(consecutiveAlpa));
+    localStorage.setItem('sahabatbk_setting_jam_batas_absen', jamBatasAbsen);
 
-    triggerSuccessMessage('Batas poin peringatan disiplin (SP) berhasil disimpan!');
+    triggerSuccessMessage('Batas poin peringatan disiplin (SP) & jam masuk berhasil disimpan!');
   };
 
   // Handle Save Device Integration Settings
@@ -210,23 +212,28 @@ export default function PengaturanSistem({
   // Handle Add Account
   const handleAddAccount = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUsername.trim() || !newNama.trim()) {
+    const cleanUsername = newUsername.trim();
+    const cleanNama = newNama.trim();
+    const cleanPassword = newPassword.trim() || 'password123';
+
+    if (!cleanUsername || !cleanNama) {
       alert('Username dan Nama harus diisi!');
       return;
     }
 
-    if (accountsList.some(acc => acc.username.toLowerCase() === newUsername.trim().toLowerCase() && acc.role === newRole)) {
-      alert(`Username "${newUsername}" dengan peran ${newRole} sudah terdaftar!`);
+    if (accountsList.some(acc => acc.username.toLowerCase() === cleanUsername.toLowerCase() && acc.role === newRole)) {
+      alert(`Username "${cleanUsername}" dengan peran ${newRole} sudah terdaftar!`);
       return;
     }
 
     const newAcc: UserAccount = {
       id: `acc-${Date.now()}`,
-      username: newUsername.trim(),
-      nama: newNama.trim(),
+      username: cleanUsername,
+      nama: cleanNama,
       role: newRole,
-      password: newPassword || 'password123',
-      kelasWali: newRole === 'WALI_KELAS' ? newKelasWali : undefined
+      password: cleanPassword,
+      kelasWali: newRole === 'WALI_KELAS' ? newKelasWali : undefined,
+      isDefault: false
     };
 
     setAccountsList(prev => [...prev, newAcc]);
@@ -711,23 +718,44 @@ export default function PengaturanSistem({
                 </div>
 
                 {/* Consecutive Alpa Limit */}
-                <div className="space-y-1 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-amber-500" />
-                    <label className="text-[10px] font-extrabold text-slate-700 uppercase">Batas Alpa Beruntun (Absensi)</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-amber-500" />
+                      <label className="text-[10px] font-extrabold text-slate-700 uppercase">Batas Alpa Beruntun (Absensi)</label>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-0.5 mb-2">Siswa yang tidak hadir tanpa kabar berturut-turut melebihi batas ini wajib dikunjungi (Home Visit)</p>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min={2}
+                        max={7}
+                        value={consecutiveAlpa}
+                        onChange={(e) => setConsecutiveAlpa(Number(e.target.value))}
+                        className="w-24 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        required
+                      />
+                      <span className="text-xs font-semibold text-slate-500">Hari Berturut-Turut</span>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 mb-2">Siswa yang tidak hadir tanpa kabar berturut-turut melebihi batas ini wajib dikunjungi (Home Visit)</p>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min={2}
-                      max={7}
-                      value={consecutiveAlpa}
-                      onChange={(e) => setConsecutiveAlpa(Number(e.target.value))}
-                      className="w-24 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-amber-500"
-                      required
-                    />
-                    <span className="text-xs font-semibold text-slate-500">Hari Berturut-Turut</span>
+
+                  {/* Jam Batas Presensi Masuk */}
+                  <div className="space-y-1 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-emerald-500" />
+                      <label className="text-[10px] font-extrabold text-slate-700 uppercase">Jam Batas Presensi Masuk</label>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-0.5 mb-2">Batas waktu siswa melakukan presensi kartu sebelum dianggap "Belum Hadir" pada hari itu</p>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="time"
+                        value={jamBatasAbsen}
+                        onChange={(e) => setJamBatasAbsen(e.target.value)}
+                        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        required
+                      />
+                      <span className="text-xs font-semibold text-slate-500">WIB (Format 24 Jam)</span>
+                    </div>
                   </div>
                 </div>
 
@@ -851,6 +879,7 @@ export default function PengaturanSistem({
                                   <option value="GURU_BK">Guru BK</option>
                                   <option value="WALI_KELAS">Wali Kelas</option>
                                   <option value="KEPALA_SEKOLAH">Kepala Sekolah</option>
+                                  <option value="GURU_PIKET">Guru Piket</option>
                                 </select>
                               </td>
                               <td className="px-3.5 py-3 text-right">
@@ -889,9 +918,11 @@ export default function PengaturanSistem({
                                     ? 'bg-indigo-50 text-indigo-700 border border-indigo-100'
                                     : acc.role === 'WALI_KELAS'
                                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                                    : acc.role === 'GURU_PIKET'
+                                    ? 'bg-sky-50 text-sky-700 border border-sky-100'
                                     : 'bg-amber-50 text-amber-700 border border-amber-100'
                                 }`}>
-                                  {acc.role === 'GURU_BK' ? 'Guru BK' : acc.role === 'WALI_KELAS' ? 'Wali Kelas' : 'Kepala Sekolah'}
+                                  {acc.role === 'GURU_BK' ? 'Guru BK' : acc.role === 'WALI_KELAS' ? 'Wali Kelas' : acc.role === 'GURU_PIKET' ? 'Guru Piket' : 'Kepala Sekolah'}
                                 </span>
                               </td>
                               <td className="px-3.5 py-3 text-right">
@@ -947,30 +978,54 @@ export default function PengaturanSistem({
                     {/* Role Selection */}
                     <div className="space-y-1">
                       <label className="text-[9px] font-extrabold text-slate-500 uppercase">Peran Pengguna (Role)</label>
-                      <div className="grid grid-cols-2 gap-2 mt-1">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+                        <button
+                          id="btn-role-select-bk"
+                          type="button"
+                          onClick={() => setNewRole('GURU_BK')}
+                          className={`py-1.5 px-1 bg-white border text-[10px] font-bold rounded-lg text-center transition-all cursor-pointer ${
+                            newRole === 'GURU_BK'
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          Guru BK
+                        </button>
                         <button
                           id="btn-role-select-wali"
                           type="button"
                           onClick={() => setNewRole('WALI_KELAS')}
-                          className={`py-1.5 px-2 border text-[10px] font-bold rounded-lg text-center transition-all cursor-pointer ${
+                          className={`py-1.5 px-1 bg-white border text-[10px] font-bold rounded-lg text-center transition-all cursor-pointer ${
                             newRole === 'WALI_KELAS'
                               ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
                               : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                           }`}
                         >
-                          Guru Wali Kelas
+                          Wali Kelas
                         </button>
                         <button
                           id="btn-role-select-kepsek"
                           type="button"
                           onClick={() => setNewRole('KEPALA_SEKOLAH')}
-                          className={`py-1.5 px-2 border text-[10px] font-bold rounded-lg text-center transition-all cursor-pointer ${
+                          className={`py-1.5 px-1 bg-white border text-[10px] font-bold rounded-lg text-center transition-all cursor-pointer ${
                             newRole === 'KEPALA_SEKOLAH'
                               ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
                               : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                           }`}
                         >
                           Kepala Sekolah
+                        </button>
+                        <button
+                          id="btn-role-select-piket"
+                          type="button"
+                          onClick={() => setNewRole('GURU_PIKET')}
+                          className={`py-1.5 px-1 bg-white border text-[10px] font-bold rounded-lg text-center transition-all cursor-pointer ${
+                            newRole === 'GURU_PIKET'
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          Guru Piket
                         </button>
                       </div>
                     </div>

@@ -1071,7 +1071,7 @@ export default function SiswaMaster({
 
             {/* Document body optimized for typical A4 single sheet printing */}
             <div className="flex-1 overflow-y-auto p-8 print:p-0 bg-slate-100 print:bg-white flex justify-center">
-              <div className="bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] relative flex flex-col justify-between text-slate-800">
+              <div className="print-paper-sheet bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] relative flex flex-col justify-between text-slate-800">
                 
                 {/* School Kop Surat */}
                 <div>
@@ -1205,7 +1205,7 @@ export default function SiswaMaster({
                     <p className="text-[10px] text-slate-500 mt-0.5">NIP. .........................................</p>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-500">Jakarta, 6 Juli 2026</p>
+                    <p className="font-semibold text-slate-500">Kras, {new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                     <p className="font-bold text-slate-800 mb-14">Kepala Unit Layanan BK</p>
                     <p className="font-extrabold text-slate-900 underline">Dra. Endang Sulastri, M.Pd.</p>
                     <p className="text-[10px] text-slate-500 mt-0.5">NIP. 19780412 199903 2 001</p>

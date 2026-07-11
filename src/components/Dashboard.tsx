@@ -216,6 +216,7 @@ export default function Dashboard({
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Selamat Datang, {username}</h1>
           <p className="mt-1.5 text-indigo-100 text-sm max-w-2xl">
             {role === 'GURU_BK' && 'Hak akses penuh Guru Bimbingan dan Konseling. Kelola data master bio-psikologis, poin pelanggaran, serta jadwal bimbingan siswa hari ini.'}
+            {role === 'GURU_PIKET' && 'Hak akses Guru Piket. Memantau rekap absensi, scan QR/barcode kehadiran siswa, serta mencatat pelanggaran kedisiplinan harian.'}
             {role === 'WALI_KELAS' && `Hak akses Wali Kelas ${kelasWali}. Memantau rekap absensi, grafik poin pelanggaran, dan riwayat bimbingan siswa bimbingan di kelas Anda.`}
             {role === 'KEPALA_SEKOLAH' && 'Hak akses Eksekutif Kepala Sekolah. Memantau grafik statistik kedisiplinan dan mengunduh laporan bulanan/semester.'}
           </p>

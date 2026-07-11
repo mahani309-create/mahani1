@@ -27,8 +27,12 @@ export default function Login({ onLogin }: LoginProps) {
         // Filter out old system default accounts and replace with current DEFAULT_ACCOUNTS
         const customAccounts = parsed.filter(acc => !acc.isDefault);
         const merged = [...DEFAULT_ACCOUNTS, ...customAccounts];
-        // Keep storage in sync with updated defaults
-        localStorage.setItem('sahabatbk_accounts', JSON.stringify(merged));
+        
+        // Only write to localStorage if it has actually changed to avoid overhead on every render
+        const mergedStr = JSON.stringify(merged);
+        if (stored !== mergedStr) {
+          localStorage.setItem('sahabatbk_accounts', mergedStr);
+        }
         return merged;
       } catch (e) {
         // Fallback
@@ -38,28 +42,90 @@ export default function Login({ onLogin }: LoginProps) {
     return DEFAULT_ACCOUNTS;
   };
 
-  const accounts = getAccounts();
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
+    const cleanUsername = username.trim();
+    const cleanPassword = password.trim();
+
+    if (!cleanUsername || !cleanPassword) {
       setError('Username/NIP dan Password wajib diisi.');
       return;
     }
 
     const accountsList = getAccounts();
-    const matched = accountsList.find(
-      acc => acc.username.toLowerCase() === username.trim().toLowerCase() && acc.role === role
+    console.log('[Login Debug] Attempting login...', {
+      enteredUsername: cleanUsername,
+      enteredRole: role,
+      allAccountsInSystem: accountsList.map(acc => ({
+        id: acc.id,
+        username: acc.username,
+        nama: acc.nama,
+        role: acc.role,
+        hasPassword: !!acc.password,
+        kelasWali: acc.kelasWali,
+        isDefault: acc.isDefault
+      }))
+    });
+
+    // 1. Try to find an exact match for BOTH username and selected role (case-insensitive username)
+    let matched = accountsList.find(
+      acc => acc.username.toLowerCase() === cleanUsername.toLowerCase() && acc.role === role
     );
 
+    // 2. Fallback: Try to find the username across any role
+    if (!matched) {
+      matched = accountsList.find(
+        acc => acc.username.toLowerCase() === cleanUsername.toLowerCase()
+      );
+      if (matched) {
+        console.log('[Login Debug] Fallback match by username across any role found:', matched.username);
+      }
+    }
+
+    // 3. Fallback: Try to find match by exact Full Name (nama) across any role
+    if (!matched) {
+      matched = accountsList.find(
+        acc => acc.nama.toLowerCase() === cleanUsername.toLowerCase()
+      );
+      if (matched) {
+        console.log('[Login Debug] Fallback match by exact Full Name (nama) found:', matched.nama);
+      }
+    }
+
+    // 4. Fallback: Try to find match by partial Full Name (nama) across any role
+    if (!matched) {
+      matched = accountsList.find(
+        acc => acc.nama.toLowerCase().includes(cleanUsername.toLowerCase())
+      );
+      if (matched) {
+        console.log('[Login Debug] Fallback match by partial Full Name (nama) found:', matched.nama);
+      }
+    }
+
     if (matched) {
-      if (matched.password && matched.password !== password) {
+      const matchPassword = (matched.password || '').trim();
+      if (matchPassword && matchPassword !== cleanPassword) {
+        console.warn('[Login Debug] Password mismatch for account:', matched.username);
         setError('Password yang Anda masukkan salah.');
         return;
       }
-      onLogin(matched.role, matched.nama, matched.kelasWali);
+      
+      console.log('[Login Debug] Login successful!', {
+        username: matched.username,
+        nama: matched.nama,
+        role: matched.role,
+        kelasWali: matched.kelasWali || kelasWali
+      });
+
+      // If matched role is different from current role selection, sync the state
+      if (matched.role !== role) {
+        setRole(matched.role);
+      }
+      // Use matched account's kelasWali, or fall back to the selected kelasWali from the login dropdown if undefined
+      onLogin(matched.role, matched.nama, matched.kelasWali || kelasWali);
     } else {
-      setError('Username tidak terdaftar untuk peran ini. Silakan masukkan username yang terdaftar atau tambahkan akun baru di Pengaturan Sistem.');
+      console.error('[Login Debug] No matching account found for username:', cleanUsername);
+      setError('Username tidak terdaftar di sistem. Silakan masukkan username yang terdaftar atau tambahkan akun baru di Pengaturan Sistem.');
     }
   };
 
@@ -95,15 +161,15 @@ export default function Login({ onLogin }: LoginProps) {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
                 Peran Pengguna (Role)
               </label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   id="role-btn-bk"
                   type="button"
-                  onClick={() => setRole('GURU_BK')}
-                  className={`py-2 px-3 border text-xs font-semibold rounded-lg text-center transition-all cursor-pointer ${
+                  onClick={() => { setRole('GURU_BK'); setError(''); }}
+                  className={`py-2 px-2 border text-[11px] font-bold rounded-lg text-center transition-all cursor-pointer ${
                     role === 'GURU_BK'
                       ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   Guru BK
@@ -111,11 +177,11 @@ export default function Login({ onLogin }: LoginProps) {
                 <button
                   id="role-btn-wali"
                   type="button"
-                  onClick={() => setRole('WALI_KELAS')}
-                  className={`py-2 px-3 border text-xs font-semibold rounded-lg text-center transition-all cursor-pointer ${
+                  onClick={() => { setRole('WALI_KELAS'); setError(''); }}
+                  className={`py-2 px-2 border text-[11px] font-bold rounded-lg text-center transition-all cursor-pointer ${
                     role === 'WALI_KELAS'
                       ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   Wali Kelas
@@ -123,14 +189,26 @@ export default function Login({ onLogin }: LoginProps) {
                 <button
                   id="role-btn-kepsek"
                   type="button"
-                  onClick={() => setRole('KEPALA_SEKOLAH')}
-                  className={`py-2 px-3 border text-xs font-semibold rounded-lg text-center transition-all cursor-pointer ${
+                  onClick={() => { setRole('KEPALA_SEKOLAH'); setError(''); }}
+                  className={`py-2 px-2 border text-[11px] font-bold rounded-lg text-center transition-all cursor-pointer ${
                     role === 'KEPALA_SEKOLAH'
                       ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   Kepsek
+                </button>
+                <button
+                  id="role-btn-piket"
+                  type="button"
+                  onClick={() => { setRole('GURU_PIKET'); setError(''); }}
+                  className={`py-2 px-2 border text-[11px] font-bold rounded-lg text-center transition-all cursor-pointer ${
+                    role === 'GURU_PIKET'
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700 shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  Guru Piket
                 </button>
               </div>
             </div>
@@ -143,7 +221,7 @@ export default function Login({ onLogin }: LoginProps) {
                 <select
                   id="kelas-wali"
                   value={kelasWali}
-                  onChange={(e) => setKelasWali(e.target.value)}
+                  onChange={(e) => { setKelasWali(e.target.value); setError(''); }}
                   className="block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 >
                   <option value="XI-IPA-1">XI-IPA-1</option>
@@ -170,7 +248,7 @@ export default function Login({ onLogin }: LoginProps) {
                   required
                   placeholder={role === 'GURU_BK' ? '19820412...' : 'Username'}
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => { setUsername(e.target.value); setError(''); }}
                   className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
@@ -191,7 +269,7 @@ export default function Login({ onLogin }: LoginProps) {
                   required
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
@@ -229,28 +307,30 @@ export default function Login({ onLogin }: LoginProps) {
           </form>
 
           {/* Default Credentials Info Box */}
-          <div className="mt-6 p-4 bg-slate-50 border border-slate-200/60 rounded-xl text-xs space-y-2">
-            <div className="flex items-center gap-1.5 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
-              <Info className="h-4 w-4 text-indigo-600 shrink-0" /> Petunjuk Akun Bawaan (Default)
+          {!error && (
+            <div className="mt-6 p-4 bg-slate-50 border border-slate-200/60 rounded-xl text-xs space-y-2">
+              <div className="flex items-center gap-1.5 text-slate-700 font-bold uppercase tracking-wider text-[10px]">
+                <Info className="h-4 w-4 text-indigo-600 shrink-0" /> Petunjuk Akun Bawaan (Default)
+              </div>
+              <p className="text-slate-500 text-[11px] leading-relaxed">
+                Gunakan akun bawaan di bawah ini untuk masuk secara manual ke dalam sistem:
+              </p>
+              <div className="space-y-1.5 font-medium text-slate-700 text-[11px] pt-1 border-t border-slate-200/50">
+                <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
+                  <span><strong>Guru BK:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">sri</code></span>
+                  <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">123456</code></span>
+                </div>
+                <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
+                  <span><strong>Wali Kelas:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">ahmad123</code></span>
+                  <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">password123</code></span>
+                </div>
+                <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
+                  <span><strong>Kepala Sekolah:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">kepsek</code></span>
+                  <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">123456</code></span>
+                </div>
+              </div>
             </div>
-            <p className="text-slate-500 text-[11px] leading-relaxed">
-              Gunakan akun bawaan di bawah ini untuk masuk secara manual ke dalam sistem:
-            </p>
-            <div className="space-y-1.5 font-medium text-slate-700 text-[11px] pt-1 border-t border-slate-200/50">
-              <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
-                <span><strong>Guru BK:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">sri</code></span>
-                <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">123456</code></span>
-              </div>
-              <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
-                <span><strong>Wali Kelas:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">ahmad123</code></span>
-                <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">password123</code></span>
-              </div>
-              <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded border border-slate-100">
-                <span><strong>Kepala Sekolah:</strong> <code className="bg-slate-100 text-indigo-700 px-1 py-0.2 rounded font-mono">kepsek</code></span>
-                <span className="text-[10px] text-slate-400">Sandi: <code className="font-mono">123456</code></span>
-              </div>
-            </div>
-          </div>
+          )}
 
 
 

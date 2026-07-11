@@ -189,7 +189,13 @@ export default function KehadiranSistem({
           fps: 20,
           qrbox: (width: number, height: number) => {
             const minDim = Math.min(width, height);
-            const boxSize = Math.floor(minDim * 0.72); // 72% of minimum screen dimension
+            let boxSize = Math.floor(minDim * 0.72); // 72% of minimum screen dimension
+            if (boxSize < 150) {
+              boxSize = Math.min(minDim, 150);
+            }
+            if (boxSize < 50) {
+              boxSize = 50;
+            }
             return { width: boxSize, height: boxSize }; // Perfect square scanning box
           },
           aspectRatio: 1.0 // Request square stream geometry if camera supports it
@@ -262,7 +268,13 @@ export default function KehadiranSistem({
             fps: 20,
             qrbox: (width: number, height: number) => {
               const minDim = Math.min(width, height);
-              const boxSize = Math.floor(minDim * 0.72);
+              let boxSize = Math.floor(minDim * 0.72);
+              if (boxSize < 150) {
+                boxSize = Math.min(minDim, 150);
+              }
+              if (boxSize < 50) {
+                boxSize = 50;
+              }
               return { width: boxSize, height: boxSize };
             },
             aspectRatio: 1.0
@@ -523,7 +535,7 @@ export default function KehadiranSistem({
                               Butuh Home Visit
                             </span>
                           )}
-                          {role === 'GURU_BK' && (
+                          {(role === 'GURU_BK' || role === 'GURU_PIKET') && (
                             <button
                               id={`btn-edit-kehadiran-${k.id}`}
                               onClick={() => handleOpenEdit(k)}
@@ -727,7 +739,7 @@ export default function KehadiranSistem({
 
             {/* Document Preview Area (Excel style sheet) */}
             <div className="flex-1 overflow-y-auto p-8 print:p-0 bg-slate-100 print:bg-white flex justify-center">
-              <div className="bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] flex flex-col justify-between text-slate-800">
+              <div className="print-paper-sheet bg-white p-10 print:p-0 w-full max-w-2xl border border-slate-300 print:border-0 shadow-lg print:shadow-none min-h-[842px] flex flex-col justify-between text-slate-800">
                 
                 {/* School Letterhead */}
                 <div>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type UserRole = 'GURU_BK' | 'WALI_KELAS' | 'KEPALA_SEKOLAH';
+export type UserRole = 'GURU_BK' | 'WALI_KELAS' | 'KEPALA_SEKOLAH' | 'GURU_PIKET';
 
 export interface UserAccount {
   id: string;
@@ -39,6 +39,14 @@ export const DEFAULT_ACCOUNTS: UserAccount[] = [
     nama: 'Dr. H. Mulyono, M.Si.',
     role: 'KEPALA_SEKOLAH',
     password: '123456',
+    isDefault: true
+  },
+  {
+    id: 'acc-4',
+    username: 'piket',
+    nama: 'Budi Santoso, S.Pd',
+    role: 'GURU_PIKET',
+    password: 'password123',
     isDefault: true
   }
 ];
@@ -105,6 +113,17 @@ export interface JadwalKonseling {
   jenis: 'Konseling' | 'Home Visit';
   keterangan: string;
   status: 'Terjadwal' | 'Selesai' | 'Batal';
+}
+
+export interface AbsenSiswaLog {
+  id: string;
+  siswaId: string;
+  namaSiswa: string;
+  kelasSiswa: string;
+  nisnSiswa: string;
+  tanggal: string; // format: YYYY-MM-DD
+  jam: string;     // format: HH:mm:ss
+  status: string;  // e.g. 'HADIR'
 }
 
 export interface PelanggaranType {
